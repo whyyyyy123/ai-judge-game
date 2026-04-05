@@ -10,14 +10,13 @@ from datetime import date
 
 PORT = 8888
 BASE = Path(__file__).parent
-DESK = Path.home() / '桌面'
 SCORES = BASE / 'scores.json'
 
 ROUTES = {
-    '/images/ai/':    DESK / 'ai',
-    '/images/notai/': DESK / 'not ai',
-    '/audio/ai/':     DESK / 'AI生成音频',
-    '/audio/notai/':  DESK / '真人音频',
+    '/images/ai/':    BASE / 'media' / 'ai',
+    '/images/notai/': BASE / 'media' / 'notai',
+    '/audio/ai/':     BASE / 'media' / 'audio_ai',
+    '/audio/notai/':  BASE / 'media' / 'audio_human',
 }
 
 MIME = {
