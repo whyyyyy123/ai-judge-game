@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔥 火眼金睛 · AI辨伪大挑战</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+QingKe+HuangYou&family=Noto+Serif+SC:wght@400;500;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #04080f;
+  --card: rgba(8,16,32,0.96);
+  --border: rgba(255,215,0,0.18);
+  --cyan: #00e5ff;
+  --red: #ff1744;
+  --gold: #ffd700;
+  --green: #69ff47;
+  --text: rgba(220,235,255,0.92);
+  --muted: rgba(160,185,220,0.6);
+  --ai-color: #ff3d68;
+  --human-color: #00d4aa;
+  --font-title: 'ZCOOL QingKe HuangYou', serif;
+  --font-body: 'Noto Serif SC', serif;
+  --font-num: 'Orbitron', monospace;
+  --font-mono: 'Share Tech Mono', monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  position:relative;
+}
+
+/* ── CANVAS BACKGROUND ── */
+#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── SCREENS ── */
+.screen{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transform:translateY(30px);
+  transition:opacity .45s ease, transform .45s ease;
+  overflow-y:auto;padding:20px;
+}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+/* ── LANDING ── */
+#sLanding{
+  background:radial-gradient(ellipse at 50% 40%, rgba(0,90,140,0.12) 0%, transparent 70%);
+  gap:0;
+  justify-content:center;
+  align-items:center;
+  padding:0;
+  overflow:hidden;
+}
+/* Two-column landing layout: left=title+button, right=leaderboard */
+.landing-inner{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  width:100%;height:100%;
+  align-items:center;
+  padding:100px 60px 40px;
+  gap:40px;
+  box-sizing:border-box;
+}
+.landing-left{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;
+}
+.landing-right{
+  display:flex;flex-direction:column;justify-content:center;
+  gap:12px;
+  padding-left:20px;
+  border-left:1px solid rgba(255,215,0,0.1);
+}
+.logo-wrap{text-align:center;position:relative}
+.logo-badge{
+  display:inline-block;
+  background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(0,229,255,0.08));
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px 44px;
+  position:relative;
+  overflow:hidden;
+}
+.logo-badge::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent,transparent 2px,rgba(255,215,0,0.015) 2px,rgba(255,215,0,0.015) 4px);
+}
+.title-ai{
+  font-family:var(--font-num);
+  font-size:clamp(2rem,6vw,4.5rem);
+  font-weight:900;
+  color:var(--cyan);
+  text-shadow:0 0 30px rgba(0,229,255,0.8),0 0 60px rgba(0,229,255,0.4);
+  letter-spacing:.05em;
+  display:block;
+}
+.title-plus{color:var(--gold)}
+.title-sub{
+  font-family:var(--font-title);
+  font-size:clamp(1.2rem,4vw,2.8rem);
+  color:var(--red);
+  text-shadow:0 0 20px rgba(255,23,68,0.7);
+  margin:.2em 0 .5em;
+  display:block;
+}
+.title-main{
+  font-family:var(--font-title);
+  font-size:clamp(1.8rem,5vw,3.8rem);
+  background:linear-gradient(135deg,var(--gold),#ff9800,var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  filter:drop-shadow(0 0 20px rgba(255,215,0,0.5));
+  display:block;
+}
+.title-cursor{display:inline-block;animation:blink .8s step-end infinite;color:var(--cyan)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+.tagline{
+  color:var(--muted);font-size:1rem;
+  font-family:var(--font-mono);letter-spacing:.15em;
+  margin-top:24px;
+}
+.badge-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.badge{
+  padding:4px 14px;border-radius:999px;font-size:.75rem;font-family:var(--font-mono);
+  border:1px solid;
+}
+.badge.text{color:#a78bfa;border-color:#a78bfa50;background:rgba(167,139,250,.08)}
+.badge.image{color:var(--cyan);border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.08)}
+.badge.audio{color:#fb923c;border-color:rgba(251,146,60,.4);background:rgba(251,146,60,.08)}
+
+.btn-start{
+  padding:16px 56px;
+  background:linear-gradient(135deg,var(--gold),#ff9800);
+  border:none;border-radius:50px;
+  font-family:var(--font-title);font-size:1.4rem;
+  color:#000;font-weight:700;
+  cursor:pointer;
+  box-shadow:0 0 40px rgba(255,215,0,0.4),0 4px 20px rgba(0,0,0,0.5);
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.btn-start::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent,rgba(255,255,255,.3),transparent);
+  transform:translateX(-100%);transition:transform .4s;
+}
+.btn-start:hover{transform:scale(1.06);box-shadow:0 0 60px rgba(255,215,0,0.6),0 8px 30px rgba(0,0,0,0.5)}
+.btn-start:hover::after{transform:translateX(100%)}
+.btn-start:active{transform:scale(0.97)}
+
+.deco-line{
+  width:80px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  margin:0 auto;
+}
+
+/* ── CORNER BADGES (landing) ── */
+.corner-nku{
+  position:absolute;top:20px;left:24px;z-index:20;
+  animation:slideInLeft .9s cubic-bezier(.22,1,.36,1) both;
+  animation-delay:.6s;
+}
+.corner-nku-inner{
+  padding:10px 16px;
+  border:1px solid rgba(255,215,0,0.35);
+  border-radius:10px;
+  background:rgba(0,5,20,0.55);
+  backdrop-filter:blur(10px);
+  position:relative;overflow:hidden;
+}
+.corner-nku-inner::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,transparent,var(--gold),transparent);
+  animation:scanLine 2.5s ease infinite;
+}
+@keyframes scanLine{0%,100%{opacity:.2}50%{opacity:1}}
+.corner-nku-line1{
+  font-family:var(--font-num);font-size:.75rem;color:var(--gold);
+  letter-spacing:.2em;opacity:.8;display:block;
+}
+.corner-nku-line2{
+  font-family:var(--font-title);font-size:1.35rem;color:var(--text);
+  line-height:1.4;display:block;margin-top:4px;
+}
+@keyframes fadeFlicker{0%,100%{opacity:.7}50%{opacity:1}}
+.corner-event{
+  position:absolute;top:20px;right:24px;z-index:20;
+  animation:slideInRight .9s cubic-bezier(.22,1,.36,1) both;
+  animation-delay:.8s;
+}
+.corner-event-inner{
+  padding:12px 22px;
+  border:1px solid rgba(0,229,255,0.4);
+  border-radius:10px;
+  background:rgba(0,5,20,0.55);
+  backdrop-filter:blur(10px);
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.corner-event-inner::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,229,255,.06),rgba(255,215,0,.04),transparent);
+  animation:shimmerEvent 3s ease infinite;
+}
+@keyframes shimmerEvent{0%,100%{opacity:.4}50%{opacity:1}}
+.corner-event-text{
+  font-family:var(--font-title);font-size:2.2rem;
+  background:linear-gradient(135deg,var(--cyan),#fff,var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:block;position:relative;z-index:1;
+  animation:pulseGlow 2.5s ease infinite alternate;
+}
+@keyframes pulseGlow{
+  from{filter:drop-shadow(0 0 5px rgba(0,229,255,.5))}
+  to{filter:drop-shadow(0 0 14px rgba(255,215,0,.7))}
+}
+.corner-event-sub{
+  font-family:var(--font-mono);font-size:.8rem;color:var(--muted);
+  letter-spacing:.18em;margin-top:3px;display:block;position:relative;z-index:1;
+}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── MINI LEADERBOARD on landing ── */
+.lb-mini-wrap{
+  width:100%;max-width:620px;margin-top:8px;
+}
+.lb-mini-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;
+}
+.lb-mini-title{
+  font-family:var(--font-mono);font-size:.7rem;color:var(--muted);letter-spacing:.18em;
+}
+.lb-mini-list{display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 200px);overflow-y:auto}
+.lb-mini-list::-webkit-scrollbar{width:3px}
+.lb-mini-list::-webkit-scrollbar-thumb{background:rgba(255,215,0,.2);border-radius:2px}
+.lb-mini-row{
+  display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:8px;
+  background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);
+  border-radius:8px;padding:7px 12px;
+  animation:slideIn .4s ease both;
+}
+.lb-mini-row.top1{border-color:rgba(255,215,0,.25);background:rgba(255,215,0,.04)}
+.lb-mini-rank{font-family:var(--font-num);font-size:.8rem;font-weight:700;text-align:center}
+.lb-mini-player{display:flex;align-items:center;gap:6px}
+.lb-mini-player-info{display:flex;flex-direction:column;gap:0px}
+.lb-mini-av{font-size:.95rem;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.lb-mini-av img{width:80%;height:80%;object-fit:contain;border-radius:3px}
+.lb-mini-name{font-size:.8rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.lb-mini-affil{font-size:.62rem;color:var(--muted);font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;display:block}
+.lb-mini-score{font-family:var(--font-num);font-size:.8rem;color:var(--gold);font-weight:700}
+
+/* ── LOGOUT button ── */
+.landing-user-bar{
+  display:none;align-items:center;gap:10px;
+}
+.landing-user-info{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:.75rem;color:var(--muted);
+}
+.landing-logout-btn{
+  background:rgba(255,23,68,.08);border:1px solid rgba(255,23,68,.25);
+  border-radius:8px;padding:6px 14px;
+  color:var(--red);font-family:var(--font-mono);font-size:.75rem;
+  cursor:pointer;transition:all .2s;
+}
+.landing-logout-btn:hover{background:rgba(255,23,68,.18);border-color:var(--red)}
+
+/* ── RECORD BURST ── */
+#recordBurst{
+  position:fixed;inset:0;z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;
+}
+#recordBurst.show{animation:burstAnim 3.5s ease forwards}
+@keyframes burstAnim{
+  0%{opacity:0}8%{opacity:1}70%{opacity:1}100%{opacity:0}
+}
+.record-text{
+  font-family:var(--font-title);font-size:clamp(3rem,8vw,5.5rem);
+  background:linear-gradient(135deg,var(--gold),#ff9800,var(--red),var(--gold));
+  background-size:300%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:recordGradAnim 3.5s ease;
+  text-align:center;
+  filter:drop-shadow(0 0 40px rgba(255,215,0,.9));
+}
+@keyframes recordGradAnim{
+  0%{transform:scale(.5);background-position:0%}
+  25%{transform:scale(1.15)}
+  40%{transform:scale(1);background-position:100%}
+  100%{background-position:200%}
+}
+.record-sub{
+  font-family:var(--font-num);font-size:clamp(.8rem,2vw,1.1rem);color:var(--cyan);
+  text-align:center;margin-top:10px;letter-spacing:.25em;
+  animation:recordSubIn 3.5s ease;
+}
+@keyframes recordSubIn{0%,10%{opacity:0;transform:translateY(10px)}20%{opacity:1;transform:none}90%{opacity:1}100%{opacity:0}}
+
+/* ── REGISTRATION (fullscreen) ── */
+#sRegister{gap:0;padding:0;justify-content:flex-start;align-items:stretch;overflow:hidden}
+.reg-layout{
+  width:100%;height:100%;
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.reg-left{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:24px;padding:60px 48px;
+  border-right:1px solid var(--border);
+  background:rgba(0,5,15,.3);
+}
+.reg-right{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 40px;gap:16px;
+  overflow:hidden;
+}
+.reg-title{
+  font-family:var(--font-title);font-size:2.2rem;
+  background:linear-gradient(135deg,var(--gold),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-align:center;
+}
+.reg-brand-tag{
+  font-family:var(--font-mono);font-size:.65rem;color:var(--muted);
+  letter-spacing:.2em;text-align:center;opacity:.6;
+}
+.name-wrap{display:flex;flex-direction:column;gap:8px;width:100%;max-width:380px}
+.name-label{font-size:.8rem;color:var(--muted);letter-spacing:.1em;font-family:var(--font-mono)}
+.name-input{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px 20px;
+  color:var(--text);font-family:var(--font-body);font-size:1.1rem;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  width:100%;
+}
+.name-input:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(0,229,255,0.15),0 0 20px rgba(0,229,255,0.1);
+}
+
+.avatar-section{width:100%;max-width:520px}
+.avatar-label{
+  font-size:.8rem;color:var(--muted);letter-spacing:.1em;
+  font-family:var(--font-mono);margin-bottom:12px;display:block;text-align:center;
+}
+.avatar-grid{
+  display:grid;grid-template-columns:repeat(10,1fr);gap:6px;
+  max-height:calc(100vh - 200px);overflow-y:auto;padding-right:4px;
+}
+.avatar-grid::-webkit-scrollbar{width:4px}
+.avatar-grid::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:2px}
+.avatar-grid::-webkit-scrollbar-thumb{background:rgba(255,215,0,.3);border-radius:2px}
+
+.av-item{
+  aspect-ratio:1;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;cursor:pointer;
+  border:2px solid transparent;transition:all .2s;
+  position:relative;
+}
+.av-item:hover{transform:scale(1.15);border-color:var(--gold)}
+.av-item.selected{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(255,215,0,0.4),0 0 15px rgba(255,215,0,0.3);
+  transform:scale(1.1);
+}
+.av-item.selected::after{
+  content:'✓';position:absolute;bottom:-2px;right:-2px;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--gold);color:#000;font-size:.5rem;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  line-height:14px;text-align:center;
+}
+
+.btn-go{
+  padding:14px 48px;
+  background:linear-gradient(135deg,#1e3a5f,#0d47a1);
+  border:1px solid rgba(0,229,255,.4);border-radius:50px;
+  color:var(--cyan);font-family:var(--font-title);font-size:1.3rem;
+  cursor:pointer;transition:all .25s;
+  box-shadow:0 0 30px rgba(0,229,255,0.15);
+  opacity:.4;pointer-events:none;
+}
+.btn-go.ready{opacity:1;pointer-events:all}
+.btn-go.ready:hover{
+  transform:scale(1.05);background:linear-gradient(135deg,#1565c0,#0d47a1);
+  box-shadow:0 0 40px rgba(0,229,255,0.3);
+}
+
+/* ── QUIZ ── */
+#sQuiz{justify-content:flex-start;padding-top:0;gap:0;max-width:800px;width:100%;margin:0 auto}
+
+.quiz-topbar{
+  width:100%;background:rgba(4,8,15,0.98);
+  border-bottom:1px solid var(--border);
+  padding:14px 20px;display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:20;flex-shrink:0;
+}
+.player-chip{display:flex;align-items:center;gap:8px}
+.player-av{font-size:1.5rem;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold);}
+.player-name{font-size:.85rem;font-family:var(--font-mono);color:var(--gold)}
+
+.stats-row{display:flex;gap:16px;margin-left:auto;align-items:center}
+.stat-box{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:999px;
+  border:1px solid;font-family:var(--font-mono);font-size:.85rem;
+}
+.stat-box.score{color:var(--gold);border-color:rgba(255,215,0,.3);background:rgba(255,215,0,.06)}
+.stat-box.correct{color:var(--green);border-color:rgba(105,255,71,.3);background:rgba(105,255,71,.06)}
+.stat-box.wrong{color:var(--red);border-color:rgba(255,23,68,.3);background:rgba(255,23,68,.06)}
+
+.progress-bar-wrap{
+  width:100%;height:3px;background:rgba(255,255,255,.06);position:relative;flex-shrink:0;
+}
+.progress-bar-fill{
+  height:100%;background:linear-gradient(90deg,var(--cyan),var(--gold));
+  transition:width .4s ease;
+}
+
+.quiz-body{
+  flex:1;overflow-y:auto;width:100%;padding:24px 20px;
+  display:flex;flex-direction:column;gap:20px;
+}
+.quiz-body::-webkit-scrollbar{width:4px}
+.quiz-body::-webkit-scrollbar-thumb{background:rgba(255,215,0,.2);border-radius:2px}
+
+.q-header{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.q-num{
+  font-family:var(--font-mono);font-size:.8rem;color:var(--muted);
+}
+.q-type-badge{
+  padding:3px 12px;border-radius:999px;font-size:.75rem;font-family:var(--font-mono);
+  border:1px solid;
+}
+.q-type-badge.text{color:#a78bfa;border-color:#a78bfa50;background:rgba(167,139,250,.1)}
+.q-type-badge.image{color:var(--cyan);border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.08)}
+.q-type-badge.audio{color:#fb923c;border-color:rgba(251,146,60,.4);background:rgba(251,146,60,.08)}
+
+/* Timer */
+.timer-ring-wrap{position:relative;width:44px;height:44px;flex-shrink:0}
+.timer-ring{transform:rotate(-90deg)}
+.timer-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:3}
+.timer-arc{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round;
+  transition:stroke-dashoffset .9s linear,stroke .5s;
+  stroke-dasharray:113;stroke-dashoffset:0}
+.timer-num{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-num);font-size:.85rem;font-weight:700;color:var(--cyan);
+}
+
+/* Content cards */
+.content-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:24px;width:100%;
+  box-shadow:0 4px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,.05);
+  animation:cardIn .35s ease;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.text-content{
+  font-family:var(--font-body);font-size:1rem;line-height:2;
+  color:var(--text);white-space:pre-wrap;max-height:300px;overflow-y:auto;
+}
+.text-content::-webkit-scrollbar{width:3px}
+.text-content::-webkit-scrollbar-thumb{background:rgba(255,215,0,.2);border-radius:2px}
+.text-title{
+  font-family:var(--font-title);font-size:1.3rem;color:var(--gold);
+  margin-bottom:12px;
+}
+.text-type-hint{
+  font-size:.75rem;color:var(--muted);margin-bottom:16px;font-family:var(--font-mono);
+}
+
+.img-content{
+  display:flex;justify-content:center;
+  border-radius:12px;overflow:hidden;
+  position:relative;
+}
+.img-content img{
+  max-width:100%;max-height:380px;object-fit:contain;border-radius:8px;
+  display:block;
+}
+.img-scan{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 0%,rgba(0,229,255,.04) 50%,transparent 100%);
+  animation:scan 2.5s linear infinite;
+  pointer-events:none;
+}
+@keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+
+.audio-content{
+  display:flex;flex-direction:column;align-items:center;gap:20px;padding:10px;
+}
+.audio-player-wrap{
+  width:100%;max-width:400px;
+}
+.audio-player-wrap audio{width:100%;border-radius:8px}
+.audio-visual{
+  display:flex;align-items:center;gap:4px;height:60px;
+}
+.audio-bar{
+  width:5px;border-radius:3px;background:var(--cyan);
+  animation:pulse-bar 1s ease infinite alternate;
+}
+.audio-bar:nth-child(2n){animation-delay:.2s}
+.audio-bar:nth-child(3n){animation-delay:.4s}
+.audio-bar:nth-child(4n){animation-delay:.1s}
+.audio-bar:nth-child(5n){animation-delay:.35s}
+@keyframes pulse-bar{from{height:8px;opacity:.4}to{height:40px;opacity:.9}}
+.audio-hint{font-size:.85rem;color:var(--muted);font-family:var(--font-mono);text-align:center}
+
+/* Answer buttons */
+.answer-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;
+}
+.btn-answer{
+  padding:20px 12px;border-radius:14px;border:2px solid transparent;
+  cursor:pointer;transition:all .2s;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-family:var(--font-title);font-size:1.1rem;
+  position:relative;overflow:hidden;
+  background:var(--card);
+}
+.btn-answer .icon{font-size:2.2rem;line-height:1}
+.btn-answer.ai-btn{
+  border-color:rgba(255,61,104,.3);color:var(--ai-color);
+  box-shadow:inset 0 1px 0 rgba(255,61,104,.1);
+}
+.btn-answer.ai-btn:hover{
+  background:rgba(255,61,104,.12);border-color:var(--ai-color);
+  box-shadow:0 0 30px rgba(255,61,104,.25),inset 0 1px 0 rgba(255,61,104,.2);
+  transform:translateY(-2px);
+}
+.btn-answer.human-btn{
+  border-color:rgba(0,212,170,.3);color:var(--human-color);
+  box-shadow:inset 0 1px 0 rgba(0,212,170,.1);
+}
+.btn-answer.human-btn:hover{
+  background:rgba(0,212,170,.12);border-color:var(--human-color);
+  box-shadow:0 0 30px rgba(0,212,170,.25),inset 0 1px 0 rgba(0,212,170,.2);
+  transform:translateY(-2px);
+}
+.btn-answer:active{transform:scale(.96)}
+.btn-answer:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* Feedback overlay */
+#feedbackOverlay{
+  position:fixed;inset:0;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  background:rgba(4,8,15,.88);backdrop-filter:blur(8px);
+}
+#feedbackOverlay.show{opacity:1;pointer-events:all}
+.feedback-card{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:32px;max-width:560px;width:90%;
+  box-shadow:0 0 60px rgba(0,0,0,.6);
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+
+.feedback-result{
+  text-align:center;font-size:2.5rem;margin-bottom:8px;
+}
+.feedback-label{
+  text-align:center;font-family:var(--font-title);font-size:1.6rem;margin-bottom:16px;
+}
+.feedback-label.correct{color:var(--green);text-shadow:0 0 20px rgba(105,255,71,.5)}
+.feedback-label.wrong{color:var(--red);text-shadow:0 0 20px rgba(255,23,68,.5)}
+.feedback-points{
+  text-align:center;font-family:var(--font-num);font-size:1.1rem;
+  color:var(--gold);margin-bottom:20px;
+}
+.feedback-source{
+  background:rgba(255,255,255,.04);border-radius:10px;padding:14px;
+  border-left:3px solid var(--gold);margin-bottom:16px;
+}
+.feedback-source-label{font-size:.7rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:4px}
+.feedback-source-text{font-size:.95rem;color:var(--text);line-height:1.6}
+.feedback-explain{font-size:.85rem;color:var(--muted);line-height:1.6}
+.btn-next{
+  width:100%;margin-top:20px;padding:14px;
+  background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(0,229,255,.08));
+  border:1px solid rgba(0,229,255,.3);border-radius:12px;
+  color:var(--cyan);font-family:var(--font-title);font-size:1.1rem;
+  cursor:pointer;transition:all .2s;
+}
+.btn-next:hover{background:rgba(0,229,255,.2);box-shadow:0 0 20px rgba(0,229,255,.2)}
+
+/* Score float animation */
+.score-float{
+  position:fixed;pointer-events:none;z-index:200;
+  font-family:var(--font-num);font-weight:700;font-size:1.8rem;
+  animation:floatUp .9s ease forwards;
+  text-shadow:0 0 10px currentColor;
+}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.3)}}
+
+/* ── RESULTS (fullscreen) ── */
+#sResults{gap:0;padding:0;justify-content:flex-start;align-items:stretch;overflow:hidden}
+.results-layout{
+  width:100%;flex:1;min-height:0;
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.results-left{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;padding:48px 40px;
+  border-right:1px solid var(--border);
+  background:rgba(0,5,15,.3);overflow-y:auto;
+}
+.results-right{
+  display:flex;flex-direction:column;gap:16px;
+  padding:48px 36px;overflow-y:auto;
+}
+.results-right::-webkit-scrollbar{width:4px}
+.results-right::-webkit-scrollbar-thumb{background:rgba(255,215,0,.2);border-radius:2px}
+.results-title{
+  font-family:var(--font-title);font-size:2.2rem;text-align:center;
+  background:linear-gradient(135deg,var(--gold),#ff9800,var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.score-reveal{text-align:center}
+.score-big{
+  font-family:var(--font-num);font-size:5rem;font-weight:900;
+  background:linear-gradient(135deg,var(--gold),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 20px rgba(255,215,0,.4));
+  display:block;line-height:1;
+}
+.score-label{font-size:.8rem;color:var(--muted);font-family:var(--font-mono);margin-top:4px}
+.results-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;
+}
+.rs-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px;text-align:center;
+}
+.rs-num{font-family:var(--font-num);font-size:2rem;font-weight:700}
+.rs-num.correct{color:var(--green)}
+.rs-num.wrong{color:var(--red)}
+.rs-num.gold{color:var(--gold)}
+.rs-label{font-size:.75rem;color:var(--muted);margin-top:4px;font-family:var(--font-mono)}
+
+.rank-box{
+  background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(0,229,255,.05));
+  border:1px solid var(--border);border-radius:16px;
+  padding:20px 32px;text-align:center;width:100%;
+}
+.rank-num{
+  font-family:var(--font-num);font-size:3rem;font-weight:900;color:var(--gold);
+}
+.rank-desc{font-size:.9rem;color:var(--muted);margin-top:4px}
+
+.review-section{width:100%}
+.review-title{
+  font-family:var(--font-mono);font-size:.8rem;color:var(--muted);
+  letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.review-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.review-list{display:flex;flex-direction:column;gap:8px}
+.review-item{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:all .2s;
+}
+.review-item.correct-item{border-color:rgba(105,255,71,.2)}
+.review-item.wrong-item{border-color:rgba(255,23,68,.2);cursor:pointer}
+.review-item.wrong-item:hover{background:rgba(255,23,68,.06);border-color:rgba(255,23,68,.4)}
+.review-icon{font-size:1.2rem;flex-shrink:0}
+.review-text{flex:1;font-size:.9rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.review-badge{
+  font-family:var(--font-mono);font-size:.7rem;padding:2px 8px;border-radius:999px;flex-shrink:0;
+}
+.review-badge.ai{color:var(--ai-color);border:1px solid rgba(255,61,104,.3);background:rgba(255,61,104,.08)}
+.review-badge.human{color:var(--human-color);border:1px solid rgba(0,212,170,.3);background:rgba(0,212,170,.08)}
+
+.results-actions{display:flex;gap:12px;width:100%}
+.btn-action{
+  flex:1;padding:14px;border-radius:12px;border:1px solid;
+  font-family:var(--font-title);font-size:1rem;cursor:pointer;transition:all .2s;
+}
+.btn-action.primary{
+  background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,215,0,.08));
+  border-color:rgba(255,215,0,.3);color:var(--gold);
+}
+.btn-action.primary:hover{background:rgba(255,215,0,.2);box-shadow:0 0 20px rgba(255,215,0,.2)}
+.btn-action.secondary{
+  background:var(--card);border-color:var(--border);color:var(--muted);
+}
+.btn-action.secondary:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* ── DETAIL MODAL ── */
+#detailModal{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  background:rgba(4,8,15,.9);backdrop-filter:blur(8px);
+}
+#detailModal.show{opacity:1;pointer-events:all}
+.detail-card{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:28px;max-width:580px;width:90%;max-height:80vh;overflow-y:auto;
+  box-shadow:0 0 60px rgba(0,0,0,.7);
+  animation:popIn .3s ease;
+}
+.detail-card::-webkit-scrollbar{width:4px}
+.detail-card::-webkit-scrollbar-thumb{background:rgba(255,215,0,.2);border-radius:2px}
+.detail-close{
+  float:right;background:rgba(255,255,255,.08);border:none;border-radius:50%;
+  width:30px;height:30px;color:var(--muted);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.detail-close:hover{background:rgba(255,23,68,.2);color:var(--red)}
+.detail-section{margin-top:16px}
+.detail-section-label{
+  font-size:.7rem;color:var(--muted);font-family:var(--font-mono);
+  letter-spacing:.1em;margin-bottom:6px;
+}
+.detail-content-box{
+  background:rgba(255,255,255,.03);border-radius:10px;padding:14px;
+  font-size:.9rem;line-height:1.8;border:1px solid rgba(255,255,255,.06);
+  max-height:180px;overflow-y:auto;white-space:pre-wrap;
+}
+.detail-content-box::-webkit-scrollbar{width:3px}
+.detail-content-box::-webkit-scrollbar-thumb{background:rgba(255,215,0,.2);border-radius:2px}
+.detail-answer-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.detail-answer{
+  padding:10px;border-radius:8px;text-align:center;font-size:.85rem;font-family:var(--font-mono);
+}
+.detail-answer.player{border:1px solid rgba(255,23,68,.3);background:rgba(255,23,68,.08);color:var(--red)}
+.detail-answer.correct{border:1px solid rgba(105,255,71,.3);background:rgba(105,255,71,.08);color:var(--green)}
+
+/* ── LEADERBOARD ── */
+#sLeaderboard{gap:24px;padding:48px 60px;justify-content:flex-start;align-items:center;overflow-y:auto}
+.lb-title{
+  font-family:var(--font-title);font-size:2.2rem;text-align:center;
+  background:linear-gradient(135deg,var(--gold),#ff9800);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.lb-table{width:100%;border-collapse:separate;border-spacing:0 6px}
+.lb-thead th{
+  font-family:var(--font-mono);font-size:.7rem;color:var(--muted);
+  text-align:left;padding:4px 12px;letter-spacing:.08em;
+}
+.lb-row{
+  background:var(--card);border-radius:10px;
+  animation:slideIn .4s ease both;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.lb-row.me{background:linear-gradient(135deg,rgba(255,215,0,.1),rgba(0,229,255,.05));border:1px solid rgba(255,215,0,.2)}
+.lb-row td{padding:12px;vertical-align:middle}
+.lb-row td:first-child{border-radius:10px 0 0 10px}
+.lb-row td:last-child{border-radius:0 10px 10px 0}
+.lb-rank{
+  font-family:var(--font-num);font-weight:700;font-size:1.1rem;text-align:center;
+}
+.lb-rank.gold{color:var(--gold)}
+.lb-rank.silver{color:#b0bec5}
+.lb-rank.bronze{color:#8d6e63}
+.lb-rank.normal{color:var(--muted)}
+.lb-player{display:flex;align-items:center;gap:8px}
+.lb-player-info{display:flex;flex-direction:column;gap:1px}
+.lb-av{font-size:1.3rem;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.lb-av img{width:80%;height:80%;object-fit:contain;border-radius:4px}
+.lb-name{font-size:.9rem}
+.lb-affil{font-size:.68rem;color:var(--muted);font-family:var(--font-mono);line-height:1.3}
+.lb-score{font-family:var(--font-num);color:var(--gold);font-weight:700}
+.lb-correct{font-family:var(--font-mono);font-size:.8rem;color:var(--green)}
+.lb-date{font-family:var(--font-mono);font-size:.75rem;color:var(--muted)}
+
+.lb-actions{display:flex;gap:12px}
+
+/* ── Particles ── */
+.particle{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:300;
+  animation:particleFly var(--dur,1s) ease forwards;
+}
+@keyframes particleFly{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}
+}
+
+/* Shake animation */
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  10%,50%,90%{transform:translateX(-6px)}
+  30%,70%{transform:translateX(6px)}
+}
+.shake{animation:shake .4s ease}
+
+/* Flash */
+@keyframes flashGreen{0%,100%{box-shadow:none}50%{box-shadow:0 0 40px rgba(105,255,71,.5)}}
+@keyframes flashRed{0%,100%{box-shadow:none}50%{box-shadow:0 0 40px rgba(255,23,68,.5)}}
+.flash-correct{animation:flashGreen .4s ease}
+.flash-wrong{animation:flashRed .4s ease}
+
+/* Responsive */
+@media(max-width:600px){
+  .avatar-grid{grid-template-columns:repeat(8,1fr)}
+  .answer-row{grid-template-columns:1fr}
+  .results-stats{grid-template-columns:repeat(3,1fr)}
+  .quiz-topbar{flex-wrap:wrap;gap:8px}
+  .stats-row{margin-left:0}
+  .lb-date{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<audio id="landingAudio" loop preload="auto" style="display:none">
+  <source src="/music/bgm.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ══════════════ RECORD BURST ══════════════ -->
+<div id="recordBurst">
+  <div class="record-text">🏆 历史最高分！</div>
+  <div class="record-sub">NEW RECORD BREAKER</div>
+</div>
+
+<!-- ══════════════ LANDING ══════════════ -->
+<div class="screen active" id="sLanding">
+  <!-- 左上角：南开大学人工智能学院权益部 -->
+  <div class="corner-nku">
+    <div class="corner-nku-inner">
+      <span class="corner-nku-line1">NANKAI UNIVERSITY</span>
+      <span class="corner-nku-line2">南开大学<br>人工智能学院权益部</span>
+    </div>
+  </div>
+  <!-- 右上角：AI游园会 -->
+  <div class="corner-event">
+    <div class="corner-event-inner">
+      <span class="corner-event-text">AI 游园会</span>
+      <span class="corner-event-sub">CARNIVAL · 2026.4.9</span>
+    </div>
+  </div>
+
+  <div class="landing-inner">
+    <!-- 左：标题 + 按钮 -->
+    <div class="landing-left">
+      <div class="logo-wrap">
+        <div class="logo-badge">
+          <span class="title-ai" id="titleAI"></span>
+          <span class="title-sub" id="titleSub"></span>
+          <span class="title-main" id="titleMain"></span>
+        </div>
+        <div class="deco-line" style="margin-top:14px"></div>
+        <p class="tagline">IDENTIFY · CHALLENGE · OUTSMART THE MACHINE</p>
+        <div class="badge-row">
+          <span class="badge text">📝 文字题</span>
+          <span class="badge image">🖼️ 图片题</span>
+          <span class="badge audio">🎵 音频题</span>
+        </div>
+      </div>
+      <button class="btn-start" id="btnStart">开始挑战 ▶</button>
+      <!-- 退出账号 -->
+      <div class="landing-user-bar" id="landingUserBar" style="position:static;display:none;justify-content:center">
+        <div class="landing-user-info">
+          <span id="landingUserAv"></span>
+          <span id="landingUserName"></span>
+        </div>
+        <button class="landing-logout-btn" onclick="logoutPlayer()">切换账号</button>
+      </div>
+    </div>
+    <!-- 右：排行榜 -->
+    <div class="landing-right">
+      <div class="lb-mini-wrap" style="margin-top:0;max-width:none">
+        <div class="lb-mini-header">
+          <span class="lb-mini-title">▸ 实时排行榜 TOP 10</span>
+        </div>
+        <div class="lb-mini-list" id="lbMiniList">
+          <div style="text-align:center;padding:10px;color:var(--muted);font-family:var(--font-mono);font-size:.75rem">加载中…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ REGISTER ══════════════ -->
+<div class="screen" id="sRegister">
+  <div class="reg-layout">
+    <div class="reg-left">
+      <div class="reg-brand-tag">南开大学 · 人工智能学院权益部 · AI游园会</div>
+      <h2 class="reg-title">创建挑战者档案</h2>
+      <div class="deco-line"></div>
+      <div class="name-wrap">
+        <label class="name-label">— 挑战者名字 —</label>
+        <input class="name-input" id="nameInput" type="text" placeholder="输入你的名字..." maxlength="12" autocomplete="off">
+      </div>
+      <div class="name-wrap">
+        <label class="name-label">— 省份 —</label>
+        <select class="name-input" id="provinceInput" style="cursor:pointer">
+          <option value="">请选择省份…</option>
+          <option>北京</option><option>天津</option><option>上海</option><option>重庆</option>
+          <option>河北</option><option>山西</option><option>辽宁</option><option>吉林</option>
+          <option>黑龙江</option><option>江苏</option><option>浙江</option><option>安徽</option>
+          <option>福建</option><option>江西</option><option>山东</option><option>河南</option>
+          <option>湖北</option><option>湖南</option><option>广东</option><option>海南</option>
+          <option>四川</option><option>贵州</option><option>云南</option><option>陕西</option>
+          <option>甘肃</option><option>青海</option><option>内蒙古</option><option>广西</option>
+          <option>西藏</option><option>宁夏</option><option>新疆</option>
+          <option>香港</option><option>澳门</option><option>台湾</option><option>其他/海外</option>
+        </select>
+      </div>
+      <div class="name-wrap">
+        <label class="name-label">— 学院 —</label>
+        <input class="name-input" id="collegeInput" type="text" placeholder="例：人工智能学院" maxlength="20" autocomplete="off">
+      </div>
+      <button class="btn-go" id="btnGo">进入考场 🎯</button>
+      <button class="btn-action secondary" style="padding:10px 28px;font-size:.9rem;border-radius:10px" onclick="showScreen('sLanding')">← 返回主界面</button>
+    </div>
+    <div class="reg-right">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 4px;margin-bottom:10px">
+        <span class="avatar-label" style="margin-bottom:0">— 选择你的专属头像 —</span>
+        <button id="btnRandomAv" style="padding:6px 16px;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.35);border-radius:20px;color:var(--gold);font-family:var(--font-mono);font-size:.72rem;cursor:pointer;transition:all .2s" onclick="selectRandomAvatar()">🎲 随机</button>
+      </div>
+      <div class="avatar-section" style="width:100%;max-width:none">
+        <div class="avatar-grid" id="avatarGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ QUIZ ══════════════ -->
+<div class="screen" id="sQuiz">
+  <div class="quiz-topbar">
+    <div class="player-chip">
+      <div class="player-av" id="topAvatar"></div>
+      <span class="player-name" id="topName">—</span>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box score">⚡ <span id="statScore">0</span></div>
+      <div class="stat-box correct">✓ <span id="statCorrect">0</span></div>
+      <div class="stat-box wrong">✗ <span id="statWrong">0</span></div>
+    </div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="quiz-body" id="quizBody">
+    <div class="q-header">
+      <span class="q-num" id="qNum">第 1 / 20 题</span>
+      <span class="q-type-badge" id="qTypeBadge">文字</span>
+      <div class="timer-ring-wrap">
+        <svg class="timer-ring" width="44" height="44" viewBox="0 0 44 44">
+          <circle class="timer-bg" cx="22" cy="22" r="18"/>
+          <circle class="timer-arc" id="timerArc" cx="22" cy="22" r="18"/>
+        </svg>
+        <div class="timer-num" id="timerNum">20</div>
+      </div>
+    </div>
+    <div id="qContent" class="content-card"></div>
+    <div class="answer-row">
+      <button class="btn-answer ai-btn" id="btnAI" onclick="submitAnswer(true)">
+        <span class="icon">🤖</span>
+        <span>AI 生成</span>
+      </button>
+      <button class="btn-answer human-btn" id="btnHuman" onclick="submitAnswer(false)">
+        <span class="icon">✍️</span>
+        <span>真实原创</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FEEDBACK ══════════════ -->
+<div id="feedbackOverlay">
+  <div class="feedback-card" id="feedbackCard">
+    <div class="feedback-result" id="fbResult"></div>
+    <div class="feedback-label" id="fbLabel"></div>
+    <div class="feedback-points" id="fbPoints"></div>
+    <div class="feedback-source">
+      <div class="feedback-source-label">题目来源</div>
+      <div class="feedback-source-text" id="fbSource"></div>
+    </div>
+    <div class="feedback-explain" id="fbExplain"></div>
+    <button class="btn-next" id="btnNext">继续下一题 →</button>
+  </div>
+</div>
+
+<!-- ══════════════ RESULTS ══════════════ -->
+<div class="screen" id="sResults">
+  <div class="results-layout">
+    <!-- 左：得分 / 排名 / 按钮 -->
+    <div class="results-left">
+      <h2 class="results-title">🏆 答题完成！</h2>
+      <div class="score-reveal">
+        <span class="score-big" id="finalScore">0</span>
+        <div class="score-label">总得分</div>
+      </div>
+      <div class="results-stats">
+        <div class="rs-card"><div class="rs-num gold" id="rTotal">0</div><div class="rs-label">总题数</div></div>
+        <div class="rs-card"><div class="rs-num correct" id="rCorrect">0</div><div class="rs-label">答对</div></div>
+        <div class="rs-card"><div class="rs-num wrong" id="rWrong">0</div><div class="rs-label">答错</div></div>
+      </div>
+      <div class="rank-box" id="rankBox" style="display:none">
+        <div style="font-size:.8rem;color:var(--muted);font-family:var(--font-mono);margin-bottom:4px">你的全服排名</div>
+        <div class="rank-num" id="rankNum">第 ? 名</div>
+        <div class="rank-pct-row" style="margin-top:8px">
+          <div class="rank-desc" id="rankPct">超越了 ?% 的挑战者</div>
+          <div class="rank-pct-bar-wrap" style="margin-top:10px;background:rgba(255,255,255,.06);border-radius:999px;height:6px;width:100%;overflow:hidden">
+            <div class="rank-pct-bar" id="rankPctBar" style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:999px;width:0%;transition:width 1.2s cubic-bezier(.22,1,.36,1)"></div>
+          </div>
+        </div>
+      </div>
+      <div class="results-actions" style="width:100%;flex-direction:column;gap:10px">
+        <button class="btn-action primary" style="width:100%" onclick="showScreen('sLeaderboard');loadLeaderboard()">查看排行榜 🏅</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">
+          <button class="btn-action secondary" onclick="newChallenge()">换人挑战 🔄</button>
+          <button class="btn-action secondary" onclick="goHome()">回主界面 🏠</button>
+        </div>
+      </div>
+    </div>
+    <!-- 右：答题回顾 -->
+    <div class="results-right">
+      <div class="review-section" style="width:100%">
+        <div class="review-title">答题回顾</div>
+        <div class="review-list" id="reviewList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ DETAIL MODAL ══════════════ -->
+<div id="detailModal">
+  <div class="detail-card" id="detailCard">
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+    <h3 style="font-family:var(--font-title);font-size:1.3rem;color:var(--gold);margin-bottom:4px" id="detailTitle"></h3>
+    <div style="font-size:.75rem;color:var(--muted);font-family:var(--font-mono)" id="detailMeta"></div>
+    <div class="detail-section">
+      <div class="detail-section-label">题目内容</div>
+      <div class="detail-content-box" id="detailContent"></div>
+    </div>
+    <div class="detail-answer-row">
+      <div class="detail-answer player">
+        <div style="font-size:.65rem;margin-bottom:4px">你的答案</div>
+        <div id="detailPlayerAns"></div>
+      </div>
+      <div class="detail-answer correct">
+        <div style="font-size:.65rem;margin-bottom:4px">正确答案</div>
+        <div id="detailCorrectAns"></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-label">来源说明</div>
+      <div style="font-size:.9rem;line-height:1.7;color:var(--text)" id="detailSource"></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-label">解析</div>
+      <div style="font-size:.85rem;line-height:1.7;color:var(--muted)" id="detailExplain"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ LEADERBOARD ══════════════ -->
+<div class="screen" id="sLeaderboard">
+  <h2 class="lb-title">🏅 火眼金睛排行榜</h2>
+  <div style="width:100%;overflow-x:auto">
+    <table class="lb-table">
+      <thead><tr class="lb-thead">
+        <th>排名</th><th>挑战者</th><th>得分</th><th>正确</th><th>省份 / 学院</th><th>日期</th>
+      </tr></thead>
+      <tbody id="lbBody"></tbody>
+    </table>
+  </div>
+  <div class="lb-actions">
+    <button class="btn-action primary" onclick="newChallenge()">换人挑战 🎯</button>
+    <button class="btn-action secondary" onclick="showScreen('sResults')">返回结果</button>
+    <button class="btn-action secondary" onclick="goHome()">回主界面 🏠</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// AUDIO ENGINE
+// ════════════════════════════════════════════════════
+let AudioCtx = null;
+let landingMusicPlaying = false;
+let landingFadeTimer = null;
+
+function getACtx(){
+  if(!AudioCtx) AudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if(AudioCtx.state==='suspended') AudioCtx.resume();
+  return AudioCtx;
+}
+
+function startLandingMusic(){
+  if(landingMusicPlaying) return;
+  landingMusicPlaying = true;
+  clearInterval(landingFadeTimer);
+  const audio = document.getElementById('landingAudio');
+  if(!audio) return;
+  audio.volume = 0;
+  const p = audio.play();
+  if(p) p.catch(()=>{ /* file not present yet */ });
+  let vol = 0;
+  const fi = setInterval(()=>{
+    vol = Math.min(vol + 0.018, 0.55);
+    try{ audio.volume = vol; }catch(e){}
+    if(vol >= 0.55) clearInterval(fi);
+  }, 60);
+}
+
+function stopLandingMusic(){
+  if(!landingMusicPlaying) return;
+  landingMusicPlaying = false;
+  const audio = document.getElementById('landingAudio');
+  if(!audio) return;
+  clearInterval(landingFadeTimer);
+  landingFadeTimer = setInterval(()=>{
+    try{
+      if(audio.volume > 0.025){ audio.volume = Math.max(0, audio.volume - 0.025); }
+      else { clearInterval(landingFadeTimer); audio.pause(); audio.currentTime = 0; audio.volume = 0.55; }
+    }catch(e){ clearInterval(landingFadeTimer); }
+  }, 50);
+}
+
+// Correct answer SFX — ascending chime arpeggio
+function playSfxCorrect(){
+  const ac = getACtx();
+  const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+  notes.forEach((f,i)=>{
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = f;
+    const t = ac.currentTime + i*0.1;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.22, t+0.04);
+    g.gain.exponentialRampToValueAtTime(0.001, t+0.5);
+    osc.connect(g);
+    g.connect(ac.destination);
+    osc.start(t);
+    osc.stop(t+0.55);
+  });
+  // Shimmer overtone
+  const shimmer = ac.createOscillator();
+  const sg = ac.createGain();
+  shimmer.type = 'sine';
+  shimmer.frequency.value = 2093;
+  sg.gain.setValueAtTime(0, ac.currentTime+0.25);
+  sg.gain.linearRampToValueAtTime(0.08, ac.currentTime+0.3);
+  sg.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+0.9);
+  shimmer.connect(sg); sg.connect(ac.destination);
+  shimmer.start(ac.currentTime+0.25);
+  shimmer.stop(ac.currentTime+1);
+}
+
+// Wrong answer SFX — descending dissonant thud
+function playSfxWrong(){
+  const ac = getACtx();
+  // Low thud
+  const thud = ac.createOscillator();
+  const tg = ac.createGain();
+  thud.type = 'sawtooth';
+  thud.frequency.setValueAtTime(180, ac.currentTime);
+  thud.frequency.exponentialRampToValueAtTime(60, ac.currentTime+0.35);
+  tg.gain.setValueAtTime(0.3, ac.currentTime);
+  tg.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+0.4);
+  thud.connect(tg); tg.connect(ac.destination);
+  thud.start(); thud.stop(ac.currentTime+0.45);
+  // Dissonant high note
+  [349.23, 369.99].forEach((f,i)=>{
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = 'square';
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0, ac.currentTime+i*0.05);
+    g.gain.linearRampToValueAtTime(0.1, ac.currentTime+i*0.05+0.04);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+0.5);
+    o.connect(g); g.connect(ac.destination);
+    o.start(ac.currentTime+i*0.05);
+    o.stop(ac.currentTime+0.55);
+  });
+}
+
+// Start landing music on first user gesture
+let musicStarted = false;
+function ensureMusicStarted(){
+  if(musicStarted) return;
+  musicStarted = true;
+  startLandingMusic();
+}
+document.addEventListener('click', ensureMusicStarted, {once:true});
+document.addEventListener('keydown', ensureMusicStarted, {once:true});
+
+// ════════════════════════════════════════════════════
+// BACKGROUND CANVAS — Starfield + Circuit
+// ════════════════════════════════════════════════════
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, stars = [], nodes = [], meteors = [];
+let nebulaSeeds = [];
+
+function resizeCanvas(){
+  W = canvas.width = innerWidth;
+  H = canvas.height = innerHeight;
+}
+
+function initBg(){
+  resizeCanvas();
+  stars = Array.from({length:180},()=>({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*1.8+.2,
+    op:Math.random()*.8+.15,
+    speed:Math.random()*.0004+.00008,
+    color: Math.random()<0.15 ? `rgba(255,220,180,` : Math.random()<0.1 ? `rgba(180,210,255,` : `rgba(210,228,255,`
+  }));
+  nodes = Array.from({length:18},()=>({
+    x:Math.random()*W, y:Math.random()*H,
+    vx:(Math.random()-.5)*.28, vy:(Math.random()-.5)*.28
+  }));
+  // Nebula anchor positions (ratios of W/H so they survive resize)
+  nebulaSeeds = [
+    {rx:.15, ry:.25, r:220, c:'rgba(0,40,120,'},
+    {rx:.75, ry:.55, r:200, c:'rgba(60,0,110,'},
+    {rx:.5,  ry:.08, r:170, c:'rgba(0,70,90,'},
+    {rx:.85, ry:.15, r:140, c:'rgba(20,60,0,'},
+    {rx:.3,  ry:.8,  r:160, c:'rgba(80,0,60,'},
+  ];
+}
+
+function spawnMeteor(){
+  meteors.push({
+    x: -50 + Math.random()*W*0.5,
+    y: -20 + Math.random()*H*0.25,
+    vx: 10 + Math.random()*16,
+    vy: 4 + Math.random()*9,
+    op: 1,
+    width: 1.5 + Math.random()*2.5,
+    trail: [],
+    maxTrail: 30 + Math.floor(Math.random()*20)
+  });
+}
+// Spawn meteors more frequently for drama
+setInterval(()=>{ if(Math.random()<0.7) spawnMeteor(); }, 2200);
+setInterval(()=>{ if(Math.random()<0.4) spawnMeteor(); }, 800);
+
+function drawBg(t){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#04080f';
+  ctx.fillRect(0,0,W,H);
+
+  // Nebula patches
+  nebulaSeeds.forEach(nb=>{
+    const grd = ctx.createRadialGradient(nb.rx*W, nb.ry*H, 0, nb.rx*W, nb.ry*H, nb.r);
+    const pulse = 0.055 + 0.015*Math.sin(t*0.18);
+    grd.addColorStop(0, nb.c+pulse+')');
+    grd.addColorStop(1, nb.c+'0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,W,H);
+  });
+
+  // Stars (twinkle)
+  stars.forEach(s=>{
+    s.op = .15 + .65*(1+Math.sin(t*s.speed*6283))/2;
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=s.color+s.op+')';
+    ctx.fill();
+  });
+
+  // Shooting stars / meteors
+  meteors = meteors.filter(m => m.op > 0.01 && m.x < W+200 && m.y < H+200);
+  meteors.forEach(m=>{
+    m.trail.push({x:m.x, y:m.y});
+    if(m.trail.length > m.maxTrail) m.trail.shift();
+    m.x += m.vx;
+    m.y += m.vy;
+    m.op -= 0.012;
+    if(m.trail.length > 1){
+      const tail = m.trail[0];
+      const grad = ctx.createLinearGradient(tail.x, tail.y, m.x, m.y);
+      grad.addColorStop(0, 'rgba(255,255,255,0)');
+      grad.addColorStop(0.3, `rgba(140,200,255,${m.op*0.2})`);
+      grad.addColorStop(0.7, `rgba(200,235,255,${m.op*0.6})`);
+      grad.addColorStop(1, `rgba(255,255,255,${m.op})`);
+      ctx.beginPath();
+      ctx.moveTo(tail.x, tail.y);
+      m.trail.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.lineTo(m.x, m.y);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = m.width;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      // Bright head glow
+      const hSize = m.width * 2.5;
+      const hGrad = ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,hSize*3);
+      hGrad.addColorStop(0,`rgba(255,255,255,${m.op})`);
+      hGrad.addColorStop(0.4,`rgba(180,220,255,${m.op*0.5})`);
+      hGrad.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=hGrad;
+      ctx.beginPath(); ctx.arc(m.x,m.y,hSize*3,0,Math.PI*2); ctx.fill();
+      // Bright core dot
+      ctx.fillStyle=`rgba(255,255,255,${m.op})`;
+      ctx.beginPath(); ctx.arc(m.x,m.y,m.width,0,Math.PI*2); ctx.fill();
+    }
+  });
+
+  // Circuit nodes
+  nodes.forEach(n=>{
+    n.x=(n.x+n.vx+W)%W;
+    n.y=(n.y+n.vy+H)%H;
+  });
+  nodes.forEach((a,i)=>nodes.slice(i+1).forEach(b=>{
+    const d=Math.hypot(a.x-b.x,a.y-b.y);
+    if(d<200){
+      ctx.beginPath();
+      ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle=`rgba(0,229,255,${(1-d/200)*.1})`;
+      ctx.lineWidth=.6;ctx.stroke();
+    }
+  }));
+  nodes.forEach(n=>{
+    const ng=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,3);
+    ng.addColorStop(0,'rgba(0,229,255,0.5)');
+    ng.addColorStop(1,'rgba(0,229,255,0)');
+    ctx.fillStyle=ng;
+    ctx.beginPath();ctx.arc(n.x,n.y,3,0,Math.PI*2);ctx.fill();
+  });
+}
+
+let animT=0;
+function animBg(ts){
+  animT=ts*.001;
+  drawBg(animT);
+  requestAnimationFrame(animBg);
+}
+window.addEventListener('resize',()=>{resizeCanvas();initBg()});
+initBg();
+requestAnimationFrame(animBg);
+
+// ════════════════════════════════════════════════════
+// TITLE ANIMATION
+// ════════════════════════════════════════════════════
+function animateTitle(){
+  const elAI = document.getElementById('titleAI');
+  const elSub = document.getElementById('titleSub');
+  const elMain = document.getElementById('titleMain');
+
+  const textAI = 'AI+ 辨伪';
+  const textSub = '|';
+  const textMain = '火眼金睛大挑战';
+
+  let i=0;
+  elAI.innerHTML='';
+  elSub.style.opacity=0;
+  elMain.innerHTML='';
+
+  const type=(el,text,delay,cb)=>{
+    let j=0;
+    setTimeout(()=>{
+      const iv=setInterval(()=>{
+        el.innerHTML=text.slice(0,++j)+(j<text.length?'<span class="title-cursor">|</span>':'');
+        if(j>=text.length){clearInterval(iv);if(cb)cb();}
+      },80);
+    },delay);
+  };
+
+  type(elAI,textAI,300,()=>{
+    elSub.style.opacity=1;elSub.style.color='rgba(255,255,255,.3)';
+    setTimeout(()=>type(elMain,textMain,0,()=>{
+      // glitch
+      let g=0;
+      const gi=setInterval(()=>{
+        elAI.style.textShadow=g%2?'3px 0 var(--red),-3px 0 var(--cyan),0 0 30px rgba(0,229,255,.8)':'0 0 30px rgba(0,229,255,.8)';
+        if(++g>6)clearInterval(gi);
+      },80);
+    }),200);
+  });
+}
+setTimeout(animateTitle,300);
+
+// ════════════════════════════════════════════════════
+// Avatar HTML helper for leaderboard cells
+function mkAvHtml(av, bg, cls){
+  const safeBg = (bg||'#1a1a2e').replace(/"/g,'');
+  if(av && av.startsWith('http')){
+    return `<div class="${cls}" style="background:${safeBg}"><img src="${av}" style="width:80%;height:80%;object-fit:contain;border-radius:4px" onerror="this.parentNode.textContent='?'"></div>`;
+  }
+  return `<div class="${cls}" style="background:${safeBg}">${av||'👤'}</div>`;
+}
+
+// AVATARS
+// ════════════════════════════════════════════════════
+const AVATARS=[
+  // ── 宝可梦 (Pokemon Company 官方CDN，稳定可靠) ──
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png', c:'#f5a623', name:'皮卡丘',   fallback:'⚡'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/133.png', c:'#bf7630', name:'伊布',     fallback:'🍂'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/039.png', c:'#e91e63', name:'胖丁',     fallback:'🎵'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/150.png', c:'#6a1b9a', name:'超梦',     fallback:'🔮'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/151.png', c:'#d81b60', name:'梦幻',     fallback:'✨'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/004.png', c:'#f57c00', name:'小火龙',   fallback:'🔥'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/006.png', c:'#c62828', name:'喷火龙',   fallback:'🐉'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/094.png', c:'#4a148c', name:'耿鬼',     fallback:'👻'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/143.png', c:'#388e3c', name:'卡比兽',   fallback:'💤'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/172.png', c:'#f9a825', name:'皮丘',     fallback:'💛'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/001.png', c:'#2e7d32', name:'妙蛙种子', fallback:'🌱'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/007.png', c:'#1565c0', name:'杰尼龟',   fallback:'🐢'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/054.png', c:'#f9a825', name:'可达鸭',   fallback:'🦆'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/129.png', c:'#ef5350', name:'鲤鱼王',   fallback:'🐟'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/052.png', c:'#546e7a', name:'喵喵',     fallback:'🐱'},
+  // ── 更多宝可梦 ──
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/149.png', c:'#e65100', name:'快龙',     fallback:'🐲'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/175.png', c:'#e8eaf6', name:'波可达',   fallback:'🥚'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/196.png', c:'#7b1fa2', name:'太阳伊布', fallback:'🌸'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/197.png', c:'#212121', name:'月亮伊布', fallback:'🌙'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/258.png', c:'#1565c0', name:'水跃鱼',   fallback:'💧'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/255.png', c:'#e64a19', name:'火稚鸡',   fallback:'🔥'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/448.png', c:'#1565c0', name:'路卡利欧', fallback:'🐾'},
+  {img:'https://assets.pokemon.com/assets/cms2/img/pokedex/full/658.png', c:'#283593', name:'忍者蛙',   fallback:'🐸'},
+  // ── 经典emoji头像 ──
+  {e:'🤖',c:'#1565c0', name:'机器人'},
+  {e:'👽',c:'#1b5e20', name:'外星人'},
+  {e:'🦊',c:'#7b2d00', name:'小狐狸'},
+  {e:'🐯',c:'#7d4e00', name:'小老虎'},
+  {e:'🦁',c:'#4e3600', name:'狮子'},
+  {e:'🐺',c:'#37474f', name:'狼'},
+  {e:'🐼',c:'#1a472a', name:'熊猫'},
+  {e:'🐲',c:'#1b5e20', name:'龙'},
+  {e:'🦄',c:'#7b1fa2', name:'独角兽'},
+  {e:'🧙',c:'#1a237e', name:'魔法师'},
+  {e:'🦸',c:'#1a237e', name:'英雄'},
+  {e:'🦹',c:'#4a148c', name:'反派'},
+  {e:'🧛',c:'#b71c1c', name:'吸血鬼'},
+  {e:'🔮',c:'#4a148c', name:'水晶球'},
+  {e:'🌙',c:'#1a237e', name:'月亮'},
+  {e:'⭐',c:'#f57f17', name:'星星'},
+  {e:'🎯',c:'#b71c1c', name:'靶心'},
+  {e:'👨‍🚀',c:'#0d47a1', name:'宇航员'},
+  {e:'👩‍💻',c:'#1a237e', name:'程序员'},
+  {e:'🧑‍🔬',c:'#006064', name:'科学家'},
+  {e:'🧚',c:'#ad1457', name:'小精灵'},
+  {e:'🎭',c:'#33691e', name:'面具'},
+  {e:'🍄',c:'#b71c1c', name:'蘑菇'},
+  {e:'🐉',c:'#1b5e20', name:'神龙'},
+];
+
+
+// ── Avatar render helper ──
+function renderAvInEl(av, el){
+  el.innerHTML = '';
+  el.style.background = av.c || '#1a1a2e';
+  if(av.img){
+    const img = document.createElement('img');
+    img.src = av.img;
+    img.style.cssText = 'width:80%;height:80%;object-fit:contain;border-radius:4px;pointer-events:none';
+    img.onerror = ()=>{ el.innerHTML=''; el.textContent = av.fallback || av.e || av.name?.[0] || '?'; };
+    el.appendChild(img);
+  } else {
+    el.textContent = av.e || '👤';
+  }
+}
+
+// When storing score, save img URL if available
+function buildAvatarGrid(){
+  const grid=document.getElementById('avatarGrid');
+  AVATARS.forEach((av,i)=>{
+    const el=document.createElement('div');
+    el.className='av-item';
+    el.style.background=av.c;
+    if(av.img){
+      const img=document.createElement('img');
+      img.src=av.img;
+      img.alt=av.name||'';
+      img.style.cssText='width:80%;height:80%;object-fit:contain;border-radius:4px;pointer-events:none';
+      img.onerror=()=>{ el.innerHTML=''; el.textContent=av.fallback||av.e||av.name?.[0]||'?'; };
+      el.appendChild(img);
+    } else {
+      el.textContent=av.e;
+    }
+    el.title=av.name||`头像 ${i+1}`;
+    el.onclick=()=>selectAvatar(i);
+    grid.appendChild(el);
+  });
+}
+buildAvatarGrid();
+
+// ════════════════════════════════════════════════════
+// QUESTION DATA
+// ════════════════════════════════════════════════════
+
+// ── TEXT QUESTIONS ──
+const TEXT_Q = [
+  // ══════════════ DOCX 文件题库 ══════════════
+  {id:'t1',type:'text',isAI:false,title:'碎银落处是乡音',typeHint:'🎭 现代诗',
+   content:`月光把夜揉成软绵，
+轻轻盖在屋顶上。
+像谁把星星
+拆成细碎的银
+撒在未眠的窗棂。
+月亮在树梢上稍作停留
+把树桠描成银亮的丝线
+像谁用指尖蘸着月光
+在墨色的纸上，
+画未做完的诗。
+我把窗台擦得很干净
+等着它落下一缕清凉。
+风路过时偷拆了半角，
+漏出里面藏着的——
+故乡屋顶
+那片未化的轻霜。
+我坐在藤椅上数月光
+指尖沾着
+茶盏里晃荡的碎银，
+你看那被月光吻过的叶子
+正把白天的疲惫
+轻轻，叠进梦的褶皱里。`,
+   source:'学生原创诗歌《碎银落处是乡音》',
+   explain:'这是人类学生的原创诗歌。以"碎银"比喻月光碎影，意象新颖独特，语言节奏自然，情感真实细腻，不同于AI常见的流水线式意象堆砌。'},
+
+  {id:'t1ai',type:'text',isAI:true,title:'灯影摇处是旧年',typeHint:'🎭 现代诗',
+   content:`灯影把窗浸成暖黄，
+轻轻笼在藤架上。
+像谁把流年
+捻成细碎的光，
+落在未关的门旁。
+灯花在檐下轻轻颤晃，
+把木格描成温柔的框，
+像谁用掌心捧着暖光，
+在晕黄的纸上，
+写未寄完的信章。
+我把藤椅挪向灯旁，
+等着它漫过一寸微凉。
+雨敲窗时偷碰了半盏，
+漏出里面藏着的——
+老院门槛
+那串未干的雨痕。
+我坐在灯影里数过往，
+指尖沾着
+瓷杯里漾开的茶香，
+你看那被灯吻过的墙
+正把岁月的匆忙
+轻轻，叠进时光的衣箱。`,
+   source:'AI按照原版诗歌《碎银落处是乡音》仿写',
+   explain:'AI将"月光→灯影"、"星星→流年"、"碎银→细碎的光"等意象做了系统性替换，结构高度对称，格式几乎一致。这种"意象平移"是AI创作的典型特征。'},
+
+  {id:'t2',type:'text',isAI:false,title:'生命从不容苦难扎根',typeHint:'🎭 现代诗',
+   content:`生命从不容苦难扎根
+要烧灼，要沸腾
+要晚春长出顶顶繁盛
+待人间绿意倾盆
+山峦亦需懂我峥嵘
+像蓝天不允许横亘
+要自由，要云深
+要错落的枝桠舒角展棱
+听万里磅礴的雷声
+誓与孤鹜相争
+像瀑布不听随峭冷
+要悬涛，要湍惊
+要停泊的夜色埋入田埂
+向青川湖海相问
+你女性的身躯是否依旧——
+浩然铮铮
+"要我永不败兴，永远生来姘婷。"`,
+   source:'学生原创诗歌，主题：女性力量与自然意象',
+   explain:'这首诗气势磅礴，运用自然意象（山峦、蓝天、瀑布、湖海）比喻女性力量，用词有棱角有个性，结尾引语力度十足，是有强烈个人风格的原创表达。'},
+
+  {id:'t2ai',type:'text',isAI:true,title:'砾石，从不向洪流屈膝',typeHint:'🎭 现代诗',
+   content:`砾石，从不向洪流屈膝
+要撞碎，要砥砺
+要在浊浪里磨出锋芒
+等岸线把潮汐熨平
+群山都听见我裂石的声响
+不必借星光的亮
+我自己就是火种
+要在暗夜里烧穿雾障
+听风卷过峡谷的回响
+与荒莽对撞
+不必等春天的信
+我自己就是锋芒
+要在冻土下顶破岩层
+向万古荒原高声问——
+你滚烫的骨血，
+是否还在奔涌？
+"要我永不低头，永远生来倔强。"`,
+   source:'AI按照原版诗歌仿写（主题迁移：女性/月亮→砾石/抗争）',
+   explain:'AI将原版的"女性生命力"主题迁移为"砾石/抗争"，保留了相同的句式结构和结尾引语格式。AI对原版框架的依赖明显，整体缺少原版那种流动感。'},
+
+  {id:'t3',type:'text',isAI:false,title:'',typeHint:'📖 散文',
+   content:`雨是最最原始的敲打乐，敲打着屋檐，敲打着瓦当，敲打着青石板路，也敲打着人心。江南的雨，总是细而密，像扯不断的丝，从天上垂下来，把整个世界都裹在一片朦胧里。
+
+我喜欢下雨天，尤其喜欢江南的春雨。春雨来时，不似夏雨那般猛烈，也不似秋雨那般萧瑟，它是温柔的，是含蓄的，是带着暖意的。田里的麦苗喝饱了水，便一个劲地往上长；河边的柳树枝条，被雨润得发软，风一吹，就轻轻摇曳，像少女的长发；墙角的青苔，在雨里绿得发亮，那是一种极嫩、极鲜的绿，看着就让人心头舒坦。
+
+草木是最懂人间的。它们不争不抢，春生夏长，秋收冬藏，顺着时节，守着本心。花开的时候，就尽情地开，把所有的美好都绽放在枝头；花落的时候，也不悲不伤，静静地归于泥土，等待下一个春天。`,
+   source:'学生习作——江南春雨散文',
+   explain:'这篇散文用"雨是最最原始的敲打乐"开篇，比喻新颖，语气自然亲切，细节描写有生活质感（麦苗、柳枝、青苔），是有真实体验支撑的写作。'},
+
+  {id:'t3ai',type:'text',isAI:true,title:'',typeHint:'📖 散文',
+   content:`风掠过窗棂时，总带着几分试探的软。它拂过巷口的老槐树，撩动垂落的槐花香，掠过青瓦上的枯草，也悄悄抚过摊开的书页。晨雾被风揉成细碎的纱，漫过巷尾的石阶，把行人的脚步裹进朦胧里。风停的刹那，时光仿佛也顿了顿——檐角的风铃悬着不动，落在窗台上的雀鸟敛了声，连心头的焦躁，都跟着慢慢沉下去。
+
+我偏爱风露相伴的清晨。不像夏日的风那般燥热，也不似深秋的风那般萧索，这初秋的风，是清润的，是澄澈的，裹着草叶上未干的露珠。路边的野菊沾着露水珠，在风里轻轻晃，晃落一地细碎的光；溪边的芦苇被风拂得弯腰，露水珠顺着苇叶滚进水里，漾开一圈圈浅纹。
+
+生活里的温柔，从不在遥不可及的远方。一阵风的轻拂，一滴露的坠落，一缕晨光的漫过，都藏着岁月的温柔。`,
+   source:'AI按照原版江南雨景散文风格仿写',
+   explain:'AI将"江南雨景"迁移为"初秋风露"主题，沿用了"不像X那般…也不似Y那般…"的对比句式，保留了"结尾哲理升华"结构，但意象过于工整，缺少原版的生活气息。'},
+
+  {id:'t4',type:'text',isAI:false,title:'',typeHint:'📖 散文·乡土',
+   content:`"踏遍青山人未老，风景这边独好。"中华大地风光无限，有诗情画意的苏杭风景，有令人流连忘返的桂林山水，有巍峨雄伟的三山五岳……即使领略过这些美丽景致，但我最喜爱的还是家乡的那一片田野。
+
+当冬日的雪渐渐消融，当肥沃的土地中探出第一株小草，当光秃秃的树枝上开出新的花，春姑娘就快降临人间了。暖阳从山后爬了上来，挂在空中。老农佝偻着腰将秧苗插进泥土，父老乡亲说着朴实的方言，唱着动听的山歌，和煦的春风拂过他们的脸颊，辛勤的汗水浸润土壤。不一会儿，田野里掀起一阵阵绿浪，令人心旷神怡。
+
+当树上浓密的叶子开始掉落，秋天到来了。水田中的稻穗远远望去宛如一泓金色的江水。农民伯伯的脸上无一不是满带笑颜，稻穗累得弯下了腰，玉米也吃得圆溜溜的。农家的孩子们在田野里你追我赶，在金黄的稻浪中来回奔跑。微风吹过，稻穗轻轻地摇摆着，望着人们远去的背影，与他们做无声的告别。`,
+   source:'学生习作——家乡田野四季散文',
+   explain:'这篇文章以春秋两季的田野为主轴，语言朴实生动，"老农佝偻着腰"、"稻穗累得弯下了腰"等细节充满乡土气息，是有真实乡村记忆支撑的写作。'},
+
+  {id:'t4ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·乡土',
+   content:`"行尽江南数千里，归来偏爱故园秋。"大江南北的盛景我曾见过几分：有烟雨朦胧的江南古镇，有雄浑壮阔的塞北戈壁，也有温婉秀丽的湖光山色……可兜兜转转，最让我魂牵梦萦的，还是故乡那片望不到边的麦田。
+
+残雪还没来得及藏进田埂的缝隙，第一缕春风就先一步吻醒了沉睡的土地。嫩黄的草芽从冻土中钻出来，试探着打量这个世界；柳丝也悄悄抽出新绿，在风里晃着柔软的腰肢。晨光漫过村头的老槐树，把老农的身影拉得很长。他弯着腰，把麦种一粒粒撒进翻松的泥土，乡邻们的笑声混着吆喝声，在风里飘得很远。
+
+当蝉声渐渐稀落，秋意就漫进了麦田。曾经嫩绿的绒毯，如今被染成了一片耀眼的金。麦浪在风里轻轻摇晃，望着他们的背影，像是在低声说着再见。`,
+   source:'AI按照田野散文结构仿写（场景迁移：稻田→麦田，地域迁移：家乡→故园）',
+   explain:'AI将原文的"稻田/水田/春夏秋"结构迁移为"麦田/冬春秋"，保留了引用诗句开篇、春秋两季描写、结尾人物背影的三段式框架。句式对应明显。'},
+
+  {id:'t5',type:'text',isAI:false,title:'',typeHint:'📖 散文·旅游',
+   content:`朦胧的烟雾，化作绵绵细雨，丝丝缕缕之间流露出江南的典雅，而茶园的文脉在这山峦与流水的起伏相交间，也更显底蕴。坐上竹筏，只觉眼前的柔情雾纱好似裹上了惆怅，卷帘的烟雨之外，将那片江南的茶园之色塑造成一幅高雅别致的山水画。
+
+"本想着来见识春光洒在茶树上，晶莹的露珠是如何在茶叶尖上跳跃的，怎料遇上阴雨天？但我未觉失落，只觉得也算是一种别样的遇见！"老者倒是挺会安慰自己的，话语间我能听出他真对江南有着美好的期待。
+
+"这便是你眼里的江南，亦是我心中的家乡！"我提高了嗓门，朝着老者的方向说道。就这样，我俩两膝相绕，盘坐游景，时而低语高声，时而遥望沉思，宛如置身于仙境之中，心底的尘土也被这淅淅沥沥的雨水冲洗而净，心灵也随之得到了平静与放松。"来喝一口。"正当我陶醉在迎面吹来的微风时，老者已经泡上了一壶茶，邀我共品。`,
+   source:'学生习作——江南茶园旅行散文',
+   explain:'这篇文章写"我"与老者在雨中茶园的相遇，对话真实生动，"两膝相绕，盘坐游景"写出了共同的意境享受，情感真挚，细节（"备来了茶具"的惊喜）真实可信。'},
+
+  {id:'t5ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·旅游',
+   content:`轻薄的雾霭，化作濛濛细雨，点点滴滴里晕开了水乡的温婉，而荷塘的清韵在这水巷与石桥的错落间，愈发动人。摇着乌篷船，只觉周身的水汽像一层柔软的纱，裹着几分淡淡的愁绪，雨帘后的荷塘，被晕染成一幅淡墨写意的水乡图。
+
+"原是想来看晨露滚过荷尖的模样，偏逢上这雨天，倒也不算遗憾——雨里的荷，才是最温柔的样子。"阿婆的声音裹着水汽，温和里藏着对这片水乡的眷恋。
+
+"这便是你眼里的水乡，也是我梦里的江南！"我对着雨雾轻声说。船桨轻摇，我们并肩坐在船尾，听雨声打在荷叶上，看雾色漫过石桥，时而低声说笑，时而静静凝望。"尝口新摘的莲蓬吧。"阿婆递来一捧饱满的莲子，我才惊觉她竹篮里还盛着刚采的荷瓣。`,
+   source:'AI按照茶园旅行散文仿写（场景迁移：竹筏茶园→乌篷船荷塘，人物迁移：老者→阿婆）',
+   explain:'AI将"竹筏/茶园/老者/茶具"置换为"乌篷船/荷塘/阿婆/莲蓬"，句式结构与对话模式高度对应。"这便是你眼里的…"这句的直接保留尤为明显。'},
+
+  {id:'t6',type:'text',isAI:false,title:'',typeHint:'📖 散文·旅游',
+   content:`一日悠闲茶香伴，江南古韵总相宜。
+
+烟雨漫舞的江南，如若一幅流动的水墨画，而眼前的一帘绿意茶海，正是满载春色的茶园之境。绿意盎然的茶园，在细润春雨的轻抚下，仿佛是大地母亲在飘摇着那一身翡翠长裙，穿梭在层层茶树间。
+
+撑起纸伞，举目遥望，远处那一望无际的满山茶园，散发出浓郁的茶香。正当我沉浸在这般静谧之中，忽见一排身披雨衣、斜跨竹篓的茶农们，穿梭在茶园之间，灵巧地采摘着嫩叶，偶然夹杂些许谈笑声，交织成一幅流动的田园茶景画。
+
+"先生，您是初到这儿？"雨势越来越大，滴滴答答的声音打破了茶园的宁静，我偶遇到一位找不到地儿的游客老者。一番思索后，我决定带他去茶园溪边划舟赏景。`,
+   source:'学生习作——江南茶园记（带游客老者赏景）',
+   explain:'这篇用"一日悠闲茶香伴"作为标题，写了带游客老者游览茶园的经历。"大地母亲飘摇翡翠长裙"这类新鲜比喻展示了原创性，偶遇老者的情节自然，带有偶然性和真实感。'},
+
+  {id:'t6ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·旅游',
+   content:`一枕清欢风作伴，乡野烟火自相宜。
+
+晚风轻拂的乡野，恰似一卷舒展的田园诗画，而眼前这片翻涌的金浪，正是盛满秋实的麦田之境。麦浪起伏的田野，在微凉晚风的摩挲下，仿佛是大地铺展的一匹鎏金锦缎，摇曳在阡陌田埂间。
+
+摘下草帽，抬眼远眺，远处那漫山遍野的金黄麦田，裹挟着成熟的麦香。正当我沉醉在这份安然之中，忽见一群头戴草帽、肩扛镰刀的农人们，行走在田垄之间，熟练地收割着麦穗，晕染成一幅鲜活的丰收图景。
+
+"小伙子，你也是来收麦的？"暮色渐渐沉落，归鸟的啼鸣划破了田野的寂静，我撞见一位寻路归家的阿婆。阿婆的背微微驼着，手里攥着半捆麦穗，我便陪着她沿着田埂，一同往炊烟升起的村落走去。`,
+   source:'AI按照茶园记仿写（场景迁移：江南茶园→乡野麦田，季节迁移：春→秋，人物：游客老者→归家阿婆）',
+   explain:'AI将原文标题格式（四字短句+古韵/烟火）直接复制，将"撑起纸伞/茶农采茶"对应替换为"摘下草帽/农人收割"，"偶遇游客老者"替换为"撞见阿婆"，结构几乎一一映射。'},
+
+  {id:'t7',type:'text',isAI:false,title:'',typeHint:'📖 散文·成长',
+   content:`清晨的巷口，豆浆摊准时飘起白雾。那股带着豆腥的醇厚香气，像一双温暖的大手，轻轻掀开这座小城惺忪的睡眼。整整三年，我的初中时光便浸泡在这片温热的雾气里。
+
+豆浆摊的阿叔年过七旬，花白的头发在晨光中尽显斑驳。他的三轮车老旧得掉了漆，车头挂着的铃铛锈迹斑斑，但那只擦得锃亮的铝制豆浆桶，却一如既往地升腾起白色的蒸汽。
+
+每天清晨，"学生仔，来啦？"他抬起头，额前的皱纹在晨光中舒展。浓郁的豆浆就这样，哗哗地流进我的保温杯，偶尔溅起的热气会烫红他的手指，他只是不在意地在围裙上抹一抹。
+
+直到中考前的那个周一，老槐树下空荡荡的。三轮车不见了，地上连水渍都没有留下。"找豆浆阿叔吗？上礼拜搬走啦，儿子在新区买了房……"原来，我每天喝下的，不仅仅是一杯豆浆，更是一份珍贵的温暖。`,
+   source:'学生习作——成长记忆散文（豆浆摊的阿叔）',
+   explain:'文章用感官细节（豆腥香气、铝制豆浆桶、"学生仔，来啦？"）勾勒出真实可感的人物，时间跨度清晰，情感积累自然，是真实生活记忆的文学化表达。'},
+
+  {id:'t7ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·成长',
+   content:`傍晚的巷尾，修鞋摊总会亮起昏黄的灯。那股混着皮革、胶水和针线的味道，像一双粗糙却安稳的手，轻轻抚平这座小城傍晚的喧嚣。整整四年，我的高中时光便缠绕在这盏暖黄的灯光里。
+
+修鞋的李伯年近花甲，鬓角的白发在灯光里格外显眼。他的木工具箱磨得发亮，边角都被岁月磨圆了，可那把磨得锋利的锥子，却总能精准地穿过每一层皮革，把破损的鞋子缝补得结实耐用。
+
+每天傍晚，"放学啦？"他抬眼笑一笑，眼角的皱纹挤成一朵花。不用我多说，他便会接过我手里开胶的球鞋，熟练地抹上胶水，压上夹子，再用粗线一针针缝牢。
+
+直到高考前的那个周五，巷尾的灯没有亮起。工具箱不见了，连地上的碎皮屑都被扫得干干净净。"找李伯吗？上周他儿子接去城里带孙子啦……"原来，我每次接过的，不仅仅是一双修好的鞋，更是一份沉甸甸的温暖。`,
+   source:'AI按照豆浆摊散文结构仿写（人物迁移：阿叔/晨/豆浆→李伯/晚/修鞋）',
+   explain:'AI将"豆浆摊阿叔"改成"修鞋摊李伯"，将"清晨/白雾/豆香"改为"傍晚/灯光/皮革味"，句式结构几乎一一对应。这种系统性替换是典型的AI迁移写作。'},
+
+  {id:'t8',type:'text',isAI:false,title:'',typeHint:'📖 散文·亲情',
+   content:`霞光未醒，露水还挂在院角的蛛网上。我推开老屋的木门，一眼就看见了墙角那只泛黄的竹篓。篓身上还沾着干涸的河泥，几根竹篾已经磨得发亮，像极了姥姥那双从不停歇的手。
+
+那是我十岁那年的暑假，第一次回到水乡姥姥家。姥姥看我捧着碗喝得一滴不剩，眼睛弯成了月牙："乖孙喜欢，姥姥天天给你捞。"那天我起夜，天还墨黑，只有一弯残月。姥姥正背着竹篓往河边走，她的身影在夜色里瘦得像一株芦苇。
+
+突然，她手腕一抖，竹篓猛地提起——篓底跳跃着几点银光。那是刚出水的小虾。有些爱，从不说出口。它藏在晨雾里，藏在河水中，藏在一只磨得发亮的竹篓里。当你终于读懂时，递来那碗粥的人，鬓角已落满了霜。`,
+   source:'学生习作——亲情散文（姥姥与竹篓捞虾的记忆）',
+   explain:'文章以实物"竹篓"为线索，通过凌晨捞虾的细节传达无言的爱，细节真实（"天还墨黑"、"身影像芦苇"），情感含蓄而深沉，体现了真实的亲情记忆。'},
+
+  {id:'t8ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·亲情',
+   content:`晨雾未散，霜气还凝在菜园的竹篱笆上。我推开后院的柴门，一眼就看见了墙角那只褪色的藤篮。篮沿上还挂着干枯的菜叶，几根藤条已经被摩挲得温润，像极了奶奶那双布满老茧的手。
+
+那是我初中那年的深秋，第一次去乡下奶奶家。奶奶看我捧着柿子吃得满脸都是，皱纹里都藏着笑："孙儿爱吃，奶奶天天给你摘。"那天我放学早，天已经擦黑，只有一抹残阳落在屋脊上。奶奶正提着藤篮往菜园走，她的身影在暮色里像一截沉静的老树。
+
+突然，她手腕一扬，藤篮轻轻一接——篮底滚落了几个红彤彤的柿子。那是挂在最高处的糖心柿。有些暖，从不说张扬。它藏在暮色里，藏在树枝间，藏在一只被磨得温润的藤篮里。当你终于懂得时，递来那碗汤的人，鬓角已染满了霜。`,
+   source:'AI按照姥姥竹篓散文结构仿写（迁移：姥姥/竹篓/捞虾/晨→奶奶/藤篮/摘柿/暮）',
+   explain:'AI将"姥姥/竹篓/晨/河边/虾"迁移为"奶奶/藤篮/暮/菜园/柿子"，结构高度对称，结尾"有些X，从不…"也直接套用。原版的"月黑/瘦芦苇"更有冲击力。'},
+
+  {id:'t9',type:'text',isAI:false,title:'',typeHint:'📖 散文·艺术',
+   content:`一幅画卷，带着千年的古韵，在华丽的舞台上缓缓展开，凝固在画卷里的满目江山，层峦起伏，波光潋滟。高髻青衣的女子，在画卷里轻甩水袖，慢移莲步，举手投足间便是缠绵如丝的委婉。白衣少年独立岸边，眼眸中的画卷里，是惊鸿起舞的仙子，云卷云舒的江山。飞瀑激流、舟楫亭桥，寺院楼台、野村渔巾，都变成了梦幻般的精灵。
+
+这精灵是山之魂、水之魂、风之魂、月之魂，她们在画面中舞蹈，她们在舞台上轻唱；她们扭动着腰肢，她们还原着画面中鲜亮的色彩；还原着静立之美、望月之美、险峰之美、卧石之美、还有刚毅之美、柔弱之美、古典之美、敬畏之美。
+
+所有的美，都传递着自然与人的爱，这爱融入了巨幅的画卷。绝色的清丽，绝色的冷艳，把这烟波浩渺的江河，青峰叠嶂的群山，在绢本上藏匿了千年。`,
+   source:'学生习作——观赏国风舞蹈表演后的感想',
+   explain:'这篇写的是观看国风舞蹈表演（画卷意境、水袖、高髻青衣女子），意象丰富而具有画面感，对"各种美"的排列体现了真实的审美感受，文中有"精灵"等原创比喻。'},
+
+  {id:'t9ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·艺术',
+   content:`一卷残帖，携着百年的墨韵，在昏黄的灯影下徐徐铺展，沉淀在纸页里的笔走龙蛇，锋藏顿挫，墨色淋漓。素衣执卷的老者，在案前轻捻笔锋，缓落墨痕，起承转合间便是力透纸背的风骨。青衫少年倚窗临帖，眸底的墨香里，是藏锋收笔的从容，烟霞满纸的山河。寒林枯木、平沙落雁，竹篱茅舍、溪桥野渡，都化作了笔墨间的精灵。
+
+这精灵是笔之魂、墨之魂、纸之魂、砚之魂，它们在宣纸上流转，它们在案几间低语；它们舒展着笔意，它们还原着纸页里浓淡的墨色；还原着藏锋之美、露锋之美、牵丝之美、飞白之美，还有苍劲之美、温润之美、疏朗之美、厚重之美。
+
+所有的美，都承载着时光与人的情，这情晕染了绵长的卷帙。清逸的洒脱，沉郁的厚重，把这云舒云卷的岁月，跌宕起伏的人生，在素纸上封存了百年。`,
+   source:'AI按照国风舞蹈散文仿写（主题迁移：舞蹈画卷→书法残帖）',
+   explain:'AI将"画卷/舞蹈/女子水袖/高髻青衣"迁移为"残帖/书法/老者临帖/素衣执卷"，将"山之魂水之魂"改为"笔之魂墨之魂"，将"各种美"的列举完全保留了排列结构。'},
+
+  {id:'t10',type:'text',isAI:false,title:'',typeHint:'📖 读书笔记',
+   content:`粉面含春威不露，丹唇未启笑先闻，你是贾家的琏二奶奶，是荣国府的掌权人，你恍若神仙妃子，又精明强干，泼辣豪爽，有巾帼不让须眉的凌厉肃杀。
+
+初迎黛玉时，一句"天下真有这般标致的人物，瞧这通身的气派，竟像是老祖宗嫡亲的孙女儿"一番话既赞黛玉又迎贾母，足可见你的七窍玲珑心。但两面三刀不择手段的也是你。"我是从来不信什么阴司地狱报应的，凭是什么事，我说行就行。"弄权铁槛寺，毒设相思局，在旁人眼里，你明是一盆火，暗是一把刀。
+
+叹人世，终难定，你机关算尽太聪明，反被聪明误。家亡人散的那一刻，生前心已碎，死后性空灵，一从二令三人木，哭向金陵事更哀。`,
+   source:'学生读书笔记——《红楼梦》人物王熙凤',
+   explain:'文章熟练引用《红楼梦》原文，分析王熙凤的复杂性格，视角独特，情感投入，语言节奏有古典文学的韵律感，体现了对原著的深度理解。'},
+
+  {id:'t10ai',type:'text',isAI:true,title:'',typeHint:'📖 读书笔记',
+   content:`眉蹙春山眼凝秋水，心较比干多一窍，你是姑苏林家的孤女，是荣国府的潇湘妃子，你清灵如世外仙姝，又敏感多思，孤高自许，有林下风致的清绝孤傲。
+
+初进荣国府时，步步留心时时在意，一句"我母亲去世的早，没读过什么书"藏尽寄人篱下的敏感，却在题诗海棠社时，一句"孤标傲世偕谁隐，一样花开为底迟"道尽风骨。你是大观园里的诗魂，葬花时吟出"一朝春尽红颜老，花落人亡两不知"，焚稿时断尽痴情，你是病若西子的才女，是心似琉璃的痴人。
+
+叹红尘，梦难寻，你质本洁来还洁去，一抔净土掩风流。大观园凋零的那一刻，生前泪尽，死后魂归，寒塘渡鹤影，冷月葬花魂。`,
+   source:'AI按照王熙凤读书笔记结构仿写（人物迁移：凤姐→黛玉）',
+   explain:'AI将原文的"凤姐"迁移为"林黛玉"，保留了"人物特质介绍+典型情节分析+命运叹惋"三段式结构。AI版在结构上更工整，但情感深度略浅。'},
+
+  {id:'t11',type:'text',isAI:false,title:'爱',typeHint:'📖 散文名篇',
+   content:`这是真的。
+
+有个村庄的小康之家的女孩子，生得美，有许多人来做媒，但都没有说成。那年她不过十五六岁吧，是春天的晚上，她立在后门口，手扶着桃树。她记得她穿的是一件月白的衫子。对门住的年轻人同她见过面，可是从来没有打过招呼的，他走了过来。离得不远，站定了，轻轻的说了一声："噢，你也在这里吗？"
+
+她没有说什么，他也没有再说什么，站了一会，各自走开了。就这样就完了。
+
+后来这女人被亲眷拐子卖到他乡外县去作妻，又几次三番地被转卖，经过无数的惊险的风波，老了的时候她还记得从前那一回事，常常说起，在那春天的晚上，在后门口的桃树下，于千万人之中遇见你所遇见的人，时间的无涯的荒野里，没有早一步，也没有晚一步，刚巧赶上了，那也没有别的话可说，惟有轻轻地问一声："噢，你也在这里吗？"`,
+   source:'张爱玲《爱》（1944年）',
+   explain:'这是张爱玲著名散文《爱》的全文。语言极简，用"于千万人之中遇见你所遇见的人"表达命运与爱的主题，节奏克制，哲思深邃，是张爱玲特有的文学气质，任何AI都难以复制这种"留白"的力量。'},
+
+  {id:'t11ai',type:'text',isAI:true,title:'',typeHint:'📖 散文',
+   content:`这是真的。
+
+有个小镇里的寻常姑娘，眉眼清秀，不少人来提亲，都被她婉拒了。那年她约莫十七八岁，是深秋的午后，她坐在巷口的老槐树下，手里缝着一件素色的布衫。她记得那天风很轻，吹得槐树叶沙沙响。同巷的那个少年，平日里只远远见过几面，竟慢慢走了过来。在她面前几步远的地方站定，声音轻得像风："原来，你也在这里晒太阳？"
+
+她没抬头，他也没再多说，只是安静站了片刻，便转身离开了。故事，就停在了这里。
+
+后来姑娘被家人远嫁他乡，辗转半生，尝尽了流离的辛苦。垂垂老矣时，她总爱坐在院中的老树下，一遍遍说起那个深秋的午后：在巷口的槐树下，于千万人之中遇见那个恰好的人，在岁月漫长的流转里，没有早一刻，也没有晚一刻，偏偏就遇上了，那也不必多言，只轻轻问一句："原来，你也在这里？"`,
+   source:'AI按照张爱玲《爱》结构仿写',
+   explain:'AI沿用了张爱玲《爱》的叙事框架，将"春天/桃树/月白衫子/村庄"替换为"深秋/槐树/布衫/小镇"，保留了"于千万人之中遇见"的哲思结尾。但原文的语气克制、命运感厚重，仿写版则略显刻意和平淡。'},
+
+  {id:'t12',type:'text',isAI:false,title:'',typeHint:'📖 散文',
+   content:`晨光初绽，薄雾如纱，笼罩着粉墙黛瓦，江南便从千年的诗意中缓缓苏醒。它像一本神秘的古书，每一页都写满了岁月的故事，每一处都藏着令人心醉的秘密，让我深深着迷，也因生于此而倍感自豪。
+
+江南的桥，是凝固的诗行，是流动的梦境。石拱桥弯弯的脊梁，横跨在潺潺的流水之上，仿佛是仙女遗落人间的玉带。斑驳的桥身镌刻着岁月的痕迹，每一道裂痕都是时光的印记。清晨，第一缕阳光洒在桥上，桥影倒映在河水中，宛如一幅灵动的水墨画。
+
+江南的水，是灵动的精灵，是江南的灵魂。它清澈见底，宛如一条碧绿的丝带，蜿蜒在江南的大地上。春日里，河水被两岸的绿树红花染成了五彩斑斓的颜色，阳光照耀下，波光粼粼，似是撒了满河的碎金。`,
+   source:'学生习作——江南风景散文',
+   explain:'这篇散文以"桥、水、人家"为线索描写江南，语言细腻优美，有"仙女遗落的玉带"等个性化比喻，整体富有文学气息。'},
+
+  {id:'t12ai',type:'text',isAI:true,title:'',typeHint:'📖 散文',
+   content:`残阳如血，风沙似歌，漫过了孤城残垒，塞北便从千年的烽烟里缓缓醒来。它像一卷厚重的史册，每一行都刻满了金戈的回响，每一页都藏着动人心魄的传奇，让我心潮澎湃，也因踏足于此而倍感豪迈。
+
+塞北的关隘，是挺立的脊梁，是沉默的守望。长城蜿蜒的轮廓，横亘在苍茫的群山之间，仿佛是巨龙盘卧在大地的脊梁。斑驳的城砖镌刻着战争的印记，每一道缺口都是岁月的勋章。黎明，第一缕晨光洒在城墙上，城影投射在戈壁上，与风沙一同起伏，宛如一幅雄浑的边塞图。
+
+塞北的河，是不羁的野马，是塞北的血脉。它奔涌向前，宛如一条褐黄的巨龙，驰骋在塞北的荒原上。`,
+   source:'AI按照江南散文结构仿写（地域迁移：江南→塞北）',
+   explain:'AI将"江南散文"整体迁移到"塞北"主题，将"薄雾/粉墙黛瓦/诗意"换为"残阳/孤城/烽烟"，将"桥/水/人家"换为"关隘/河/人家"，句式结构几乎一一对应。这是AI最明显的结构模仿特征。'},
+
+  {id:'t13',type:'text',isAI:false,title:'',typeHint:'📖 学生作文',
+   content:`我常常独自坐在书桌窗前，静静地思索：生命是什么颜色？
+
+是蓝色？紫色？粉色……我的同龄人说，生命，是绿色的，像那生机勃勃的春天一样。
+
+春天来临，刚刚吐露的草芽儿，正冲破泥土的阻扰，奋发向上，去迎接春的洗礼。绿色象征着希望，绿色孕育着未来。姐姐说，生命，是红色的，像那如火如荼的夏天。爸爸说，生命，是金色的，像那硕果累累的秋天。奶奶说，生命，是白色的，像那晶莹洁净的冬天。
+
+大地的万物告诉我，生命是五颜六色的，像雨后的彩虹一样，绚烂多彩。我终于明白了！世界万物所具有的色彩，都是生命的颜色；只有五彩缤纷的生命才能创造出多彩的生活！`,
+   source:'学生作文——《生命是什么颜色？》',
+   explain:'这是一篇典型的学生作文，以家人的视角贯穿四季，语气天真，富有生活感。"草芽儿"、"追逐嬉戏"等细节充满童趣，结尾用彩虹作结，朴实而真挚。'},
+
+  {id:'t13ai',type:'text',isAI:true,title:'',typeHint:'📖 散文',
+   content:`我常常独自坐在廊下藤椅里，静静地聆听：时光是什么声音？
+
+是风声？雨声？蝉鸣……我的伙伴说，时光，是清脆的，像那春日里的鸟鸣。
+
+春风拂过，刚抽条的柳丝在风里轻晃，唤醒了沉睡的枝丫，去拥抱新的黎明。清脆象征着朝气，清脆承载着生机。哥哥说，时光，是热烈的，像那盛夏里的蝉鸣。妈妈说，时光，是沉稳的，像那深秋里的落叶声。爷爷说，时光，是沉静的，像那冬日里的落雪声。
+
+天地的万物告诉我，时光是千姿百态的，像一首变幻的乐章，丰富动人。我终于明白了！世间万物所发出的声响，都是时光的声音；只有丰富多变的时光，才能谱写出动人的岁月！`,
+   source:'AI按照《生命是什么颜色？》结构仿写（主题迁移：颜色→声音）',
+   explain:'AI将"生命的颜色"改为"时光的声音"，将"视觉"替换为"听觉"，保留了完全相同的"提问+四季+家人视角+结尾升华"结构。这种主题迁移是AI最常见的创作模式之一。'},
+
+  {id:'t14',type:'text',isAI:false,title:'',typeHint:'📖 散文·游记',
+   content:`我曾领略过雨中西湖的朦胧美感，也感叹过奔涌长江的雄浑壮阔，但一直对享有"西子三千"美誉的千岛湖有着深深的留念。趁着今年春节的闲暇假期，我与家人再次踏上了千岛湖之旅，乘着一叶扁舟，观赏这如诗如画的千岛湖之景，品味行走的年味！
+
+刚步入千岛湖，我便被眼前碧绿如玉的湖水给陶醉了，此情此景，犹如一位低眉含笑的江南女子，温婉而含蓄，婀娜的身姿仿佛在给游客们诉说着千年的历史故事。
+
+"小时候，我也和你外婆来过这一趟，那时候我还小，只记得我躺在她怀里，船只慢悠悠地移动着……时间过得很慢，可我还是希望时间可以停下来，定格在那一瞬间。"坐在我身旁的妈妈在碎碎念叨着，眼里夹杂着几丝闪烁的泪光。
+
+"妈妈，以后每年过年我还要带你去更多的地方，览华夏江河之壮丽！"我打断了她的思绪，说罢便转身将她抱入怀中。`,
+   source:'学生习作——千岛湖春节游记',
+   explain:'这篇游记将千岛湖的美景与妈妈的回忆融为一体，"碎碎念叨"、"几丝闪烁的泪光"等细节真实，母女情感自然流露，是有真实情感体验的写作。'},
+
+  {id:'t14ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·游记',
+   content:`我曾沉醉过丽江古城的慵懒夜色，也惊艳过凤凰古城的吊脚楼群，但一直对藏在江南深处的乌镇有着淡淡的牵挂。趁着今年中秋的月圆之夜，我与家人再次踏上了乌镇之旅，提着一盏花灯，漫步在青石板铺就的巷弄里，品味团圆的温情。
+
+刚踏入乌镇，我便被眼前黛瓦白墙的水乡给治愈了，此情此景，犹如一位素衣静坐的江南姑娘，沉静而温柔，眉眼间仿佛在给过客们讲述着百年的烟火故事。
+
+"小时候，我也和你外公来过这一趟，那时候我还小，只记得我攥着他的衣角，灯笼的光暖暖地裹着我们……时间走得很慢，可我还是希望时间可以慢一点，留住那片光。"坐在我身旁的妈妈在轻轻念叨着，眼里泛着温柔的光。
+
+"妈妈，以后每个中秋我都要陪你看月亮，走更多的古镇，看更多的人间烟火！"我握紧她的手，将花灯往她身边靠了靠。`,
+   source:'AI按照千岛湖游记仿写（景点迁移：千岛湖→乌镇，节日迁移：春节→中秋，交通：扁舟→花灯）',
+   explain:'AI将"千岛湖/春节/扁舟/外婆"置换为"乌镇/中秋/花灯/外公"，保留了"开篇引他处景→新景赞美→妈妈回忆→女儿誓言"的四段结构，对话格式几乎一致。'},
+
+  {id:'t15',type:'text',isAI:false,title:'',typeHint:'📖 散文·游记',
+   content:`船只在缓缓移动着，两岸的青山与湖中的绿水交相映照，水色与流光泛着微光，无不彰显着湖岛水天一色的诗情画意。湖畔的古村落，青砖黛瓦的历史沉香感，老树、古巷、流水，每一处皆散发着浓厚的韵味。湖面上的游船往来穿梭，游客们或欢声笑语，或吟诗诵词……而在划船的过程中，我们一家三口都没有聊天，各自沉浸在千岛湖的美景中，静默沉思。
+
+在千岛湖的环抱中，我感受到了爱的温暖，这种情感与母爱不一样，甚至可以说它比母爱所带来的情感温度还要更强烈，这好似是祖国妈妈所带给我的厚重感。"妈妈，你是外婆的女儿，我是您的女儿。但我们，都是祖国妈妈的女儿，不是？"恍然间，我打破了这般宁静的氛围，朝妈妈的方向说这话。`,
+   source:'学生习作——千岛湖游记（续篇：家国情感升华）',
+   explain:'这段将游览感受升华到家国情感，"我们都是祖国妈妈的女儿"的情感引申自然，是学生真实的情感体验和思考，结尾的爱国情感收束与开篇自然衔接。'},
+
+  {id:'t15ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·游记',
+   content:`列车在平稳行驶着，窗外的群山与田间的金浪层层叠叠，稻穗与夕阳染着暖光，处处诉说着乡野天地辽阔的岁月温柔。路旁的老村落，土坯院墙的烟火气，老井、篱笆、炊烟，每一寸都流淌着质朴的温情。车厢里的旅人来来往往，或低声闲谈，或凭窗远眺……而在行进的途中，我们祖孙三人都没有多言，各自沉醉在乡野的景致里，静默凝望。
+
+在乡野的包裹里，我触摸到了家的温度，这份情感与亲情不一样，甚至比亲情更绵长厚重，这恰似是祖国大地所赠予我的归属感。"爷爷，您是太爷爷的儿子，爸爸是您的儿子。但我们，都是祖国大地的孩子，对吗？"恍惚间，我轻声打破了这份沉静，侧过头对爷爷说道。`,
+   source:'AI按照千岛湖游记（续篇）仿写（迁移：船/湖/母女/外婆→列车/乡野/祖孙/爷爷）',
+   explain:'AI将"扁舟在湖上"替换为"列车在乡野"，将"妈妈/外婆/一家三口"替换为"爷爷/太爷爷/祖孙三人"，将"祖国妈妈"替换为"祖国大地"，结构与情感路径几乎相同。'},
+
+  {id:'t16',type:'text',isAI:false,title:'',typeHint:'📖 散文·游记',
+   content:`船在水中行，我在画中游。在这里，我仿佛走进了一片流动的画卷仙境，见到了古人笔下的江南水乡，感受到了自然文化底蕴的熏陶。
+
+回行的路上，两边皆是行色匆匆的春节游客，他们好似在赶路，擦肩而过间，我才发现他们已然错过了眼前这片景色。顷刻间，我一溜烟似的追上爸爸妈妈的脚步，牵着妈妈的手，对她说道："咱慢些走，千岛湖的风景定是没有走完看完的，但我们却意外收获了旅行的最高奢侈品——闲情雅致。"
+
+"结庐在人境，而无车马喧。"尽管在人群如潮的春节期间，但我却在此次千岛湖之行中感受到了诗人陶渊明的豁然心境。`,
+   source:'学生习作——千岛湖游记（结篇：闲情雅致与陶渊明）',
+   explain:'以"船在水中行，我在画中游"开篇，用陶渊明诗句收束，引用贴切。"闲情雅致是旅行的最高奢侈品"这一感悟是个人真实体验的升华，语言活泼（"一溜烟似的追上"）。'},
+
+  {id:'t16ai',type:'text',isAI:true,title:'',typeHint:'📖 散文·游记',
+   content:`人在巷间走，魂在景中留。在这里，我仿佛步入了一卷静止的时光长卷，邂逅了记忆里的江南古镇，体会到了岁月烟火生活的滋养。
+
+返程的途中，两旁皆是奔波赶路的节假日行人，他们好似在奔忙，错身而过时，我才发觉他们已然错过了身后这片静谧的美好。刹那间，我小跑似的赶上爷爷奶奶的脚步，挽着奶奶的臂弯，对她说道："咱们慢步逛，古镇的街巷是没有走到尽头的，但我们却意外收获了旅途的最高馈赠——岁月静好。"
+
+"行至水穷处，坐看云起时。"纵然在节假日人山人海的喧嚣中，但我却在此次古镇之行中寻到了王维诗中的悠然心境。`,
+   source:'AI按照千岛湖结篇仿写（迁移：湖上/陶渊明/闲情雅致→古镇/王维/岁月静好）',
+   explain:'AI将"船在水中行"改为"人在巷间走"，将"追上爸爸妈妈/牵着妈妈"改为"赶上爷爷奶奶/挽着奶奶"，将"陶渊明结庐"改为"王维行至水穷"，套路完全一致。'},
+
+  // ══════════════ .doc 文件题库 ══════════════
+  {id:'d_wz',type:'text',isAI:false,title:'',typeHint:'📖 散文名家·汪曾祺',
+   content:`一个挑水的。水桶里猪耳菜叶子一上一下。两朵淡紫色花在水里投下影子。
+
+卖白糖糕的。他的笼里落了不少灰。糕正在时间中变质。他想吆唤一声，"白糖糕，太平糕，"想叫又不叫。
+
+纸烟铺里一个秃头小伙计，睡着了。别睡着呀，别睡着呀，而他睡着了。口涎沿手臂流淌到一本账簿上，红格子洇开来了。他笑了。一定是梦见他唯一的亲人，他的外祖母夸奖他真能干。而正在这时候，卖丁丁糖的震耳的敲过他的小小铁砧子！
+
+一辆洋车过来，拐弯了，车夫大叫，声音中充满轻蔑："让开！"
+
+如果，你要是一个画家，你画他，在背景上，在他的身后，你画许多鸽子么？你画吧。`,
+   source:'汪曾祺（中国当代文学大家，代表作《受戒》《大淖记事》）',
+   explain:'汪曾祺的文字以短句、白描、俗语见长，"糕正在时间中变质"这句已成名言。语言节奏极具个人特色，散漫而精准，是任何AI都难以复制的独特气质。'},
+
+  {id:'d_wz_ai',type:'text',isAI:true,title:'',typeHint:'📖 散文',
+   content:`巷口补鞋摊的麻线团三十年没散。老周头坐在马扎上，膝盖铺着磨出毛边的帆布，锥子扎透鞋底时，总要从老花镜上沿瞟一眼过路人的脚。
+
+"后跟磨偏的走路急，前掌薄的性子软"，他捏着鞋就像捏着人的脾性。隔壁炸油条的老板娘每年开春都来钉一次拖鞋带，化纤带子被油浸得发亮；象棋摊的王老头每回输棋就跺脚，鞋头总先开口笑。
+
+帆布箱里收着半截粉笔头，租录像带的小伙来修皮鞋那几年，箱盖上记满《英雄本色》的归还日期。后来他改卖手机贴膜，运动鞋变成尖头皮鞋，鞋底却还是让老周头粘胶——说机器压的不如人手捶的牢靠。
+
+去年冬天麻线团终于用完，儿子给他换上尼龙线。老周头嘟囔新线勒手，却把尼龙线头在蜡块上搓了又搓——这样穿过鞋底时才顺溜。巷子拆迁通知贴在电线杆上那天，他照常敲平最后一枚鞋钉，锤子声稳稳压过推土机的轰鸣。`,
+   source:'AI仿照汪曾祺风格创作（场景：巷口补鞋摊）',
+   explain:'AI尝试模仿汪曾祺的白描风格，运用短句和生活细节，但仔细阅读会发现AI的细节略显刻意——"锤子声稳稳压过推土机的轰鸣"这类对比过于工整，缺乏汪曾祺那种随意而精准的质感。'},
+
+  {id:'d_bx',type:'text',isAI:false,title:'',typeHint:'🎭 诗歌·冰心',
+   content:`晓光破了，
+海关上光明了。
+我的心思，
+小鸟般乘风高举。
+飞遍了天边，
+到了海极，天边，海极都充满着你的爱。
+上帝啊！
+你的爱随处接着我，
+你的手引导我，
+你的右手也必扶持我。
+我的心思，
+小鸟般乘风高举，
+乘风高举，
+终离不了你无穷的慈爱。`,
+   source:'冰心（谢婉莹，中国现代著名女作家，代表作《繁星》《春水》）',
+   explain:'冰心的诗以纯真、温柔、充满爱意著称，"小鸟般乘风高举"的意象清新脱俗，重复"乘风高举"的语气真挚，整首诗结构简洁而情感饱满，是有强烈个人风格的原创作品。'},
+
+  {id:'d_bx_ai',type:'text',isAI:true,title:'',typeHint:'🎭 诗歌',
+   content:`晨光刺破薄暗，
+溪边泛起微芒，
+我的思绪，
+如雀儿乘风轻扬。
+掠过林梢的尽头，
+飞向雾散的远方，
+水阔，天清，
+你的低语在风中流淌。
+天地间，
+你的气息漫过山岗，
+你的影子伴我翱翔，
+你的轻抚拂我羽裳。
+我的思绪，
+如雀儿迎风高舞，
+乘风而去，
+终栖于你无垠的晨光。`,
+   source:'AI按照冰心诗歌仿写',
+   explain:'AI将"晓光/海关/心思/小鸟"替换为"晨光/溪边/思绪/雀儿"，将"上帝的爱"改为"你的低语/气息/影子"，保留了重复句式（"乘风高举→乘风而去"），但失去了冰心原作的纯粹与直接。'},
+
+  {id:'d_zal',type:'text',isAI:false,title:'',typeHint:'📖 散文·张爱玲',
+   content:`屋顶花园里常常有孩子们溜冰，兴致高的时候，从早到晚在我们头上咕滋咕滋锉过来又锉过去，像瓷器的摩擦，又像睡熟的人在那里磨牙，听得我们一粒粒牙齿在牙龈里发酸如同青石榴的子，剔一剔便会掉下来。隔壁一个异国绅士气势汹汹上楼去干涉。他的太太提醒他道："人家不懂你的话，去也是白去。"他揎拳掳袖道："不要紧，我会使他们懂得的！"隔了几分钟他偃旗息鼓嗒然下来了。上面的孩子年纪都不小了，而且是女性，而且是美丽的。
+
+谈到公德心，我们也不见得比人强。阳台上的灰尘我们直截了当地扫到楼下的阳台上去。"啊，人家栏杆上晾着地毯呢——怪不过意的，等他们把地毯收了进去再扫吧！"一念之慈，顶上生出了灿烂圆光。这就是我们的不甚彻底的道德观念。`,
+   source:'张爱玲散文（1940年代上海公寓生活随笔）',
+   explain:'张爱玲的文字以精准、冷峻、幽默见长。"听得我们一粒粒牙齿在牙龈里发酸如同青石榴的子"是张爱玲式的绝妙比喻，"一念之慈，顶上生出了灿烂圆光"是带讽刺意味的自嘲，风格独树一帜。'},
+
+  {id:'d_dq',type:'text',isAI:false,title:'',typeHint:'📖 散文·董桥',
+   content:`每一件事情跟每一个人跟每一种观念都纠缠在一起，都谈不上巧合，事情总是这样，反射又反射：写小说的人想尽办法要让小说显得更像科学；搞科学的人想尽办法要让科学显得是想象力的结晶。
+
+于是，小说家要把文字"消毒"成"一面窗玻璃"，看到什么写什么，像科学家的实验报告。科学家要把一切定律解释成创作灵感，甚至物理学上的"测不准原理"也给说成是跟"世界无常"的道理一样。
+
+不必讶异，不必惊喜，更说不上什么巧合。事情总是这样。`,
+   source:'董桥（香港著名散文家、文化评论者，代表作《英华沉浮录》）',
+   explain:'董桥的文章以思辨性和文化典故见长，"反射又反射"的句式是他惯用的语言节奏，"小说要像科学，科学要像小说"这种悖论式的观察是他独特的思维方式，体现了真实的人文积累。'},
+
+  {id:'d_dq_ai',type:'text',isAI:true,title:'',typeHint:'📖 散文',
+   content:`所有行当和所有人跟所有道理都绞成死结，难觅新章，世道终归如此，模仿再模仿：做饭的师傅非要把炒菜步骤写成数学公式，盐几克油几克标得清清楚楚；教数学的老师反倒把解题方法编成炒菜口诀，说什么"证明题就像熬高汤要慢慢收汁"。
+
+结果掌勺的捏着量勺调糖醋比，念叨"三勺醋配四勺糖才是黄金分割"；讲课的敲着黑板训学生，"第二步没写全就像炒菜忘放盐"。不足为奇，不足为道，终究还是旧线重编。世道终归如此。`,
+   source:'AI按照董桥散文风格仿写（主题迁移：小说与科学→炒菜与数学）',
+   explain:'AI将董桥原文的"小说家与科学家"主题替换为"厨师与数学老师"，保留了"反射又反射"式的交叉结构，末句"世道终归如此"也模仿了董桥的收束方式，但整体缺少董桥原文的哲学厚度。'},
+
+  {id:'d_lqx',type:'text',isAI:false,title:'',typeHint:'📖 散文·林清玄',
+   content:`夜宿的心情却不同。头上的强光一束，亮然射出，穿透雨网，明澈慑人。塔的顶端窗门竟有竹帘，我细心地卷了帘，看到天风海雨围绕周边，海浪激射，一起一落，在夜雨的空茫里，渔火点点，有的迎着强光驶进港内，有的依着光漂向渺不可知的远方。`,
+   source:'林清玄（台湾著名散文家，代表作《菩提系列》）',
+   explain:'林清玄的文字清净、禅意深厚，"强光一束，亮然射出，穿透雨网"节奏铿锵，"漂向渺不可知的远方"意境悠远。这种禅意化的自然观察是其标志性风格。'},
+
+  {id:'d_lqx_ai',type:'text',isAI:true,title:'',typeHint:'📖 散文',
+   content:`屋子里静得很，窗外偶尔有风，吹得松枝发出微微的响声。我本来想点支蜡烛，但觉得那火光太亮，反倒坏了这份沉静。于是就这么坐着，手里握着一本书，翻到一半，却已经忘了上一个字写了什么。有时候，人其实并不是真的在看书，而只是借着书页遮住自己，让思绪自在地游走。
+
+公寓楼下，新来的王嫂开了家麻将馆。每到黄昏，哗啦啦的洗牌声便从窗缝钻上来，像一群麻雀在耳边开会。楼上的小伙嫌吵，拎根拖把敲地板抗议，结果王嫂隔空喊话："小伙子，来搓两把，手气旺得很！"他还真下了楼，回来时兜里多了包烟，笑得见牙不见眼。
+
+隔壁老李养了只八哥，教它学舌，整天"您好""吃饭了吗"叫得满楼飞。某天电梯里，我随口回了句"吃了"，才发现对面没人——八哥又在捉弄人。这公寓，鸡毛蒜皮里藏着笑料，谁也别嫌谁怪。`,
+   source:'AI生成的公寓生活场景散文',
+   explain:'这是AI生成的城市公寓生活散文，有一定的生活气息，但细节堆砌较多，"八哥捉弄人"这类段子感偏重，缺少真实散文那种自然的情感流动和余韵。'},
+
+  {id:'d_chat',type:'text',isAI:false,title:'',typeHint:'💬 真实聊天记录',
+   content:`"我好想回去吃你做的饭"
+
+"妈妈做饭不好吃"
+
+"但妈妈想你了"`,
+   source:'真实家人聊天记录（原话）',
+   explain:'这段聊天记录极短，却情感真实。"妈妈做饭不好吃"是孩子的诚实，"但妈妈想你了"是母亲的转折，两句之间的落差创造了真实的情感共鸣。这种质朴的表达很难被AI完整复制。'},
+
+  {id:'d_chat_ai',type:'text',isAI:true,title:'',typeHint:'💬 聊天记录',
+   content:`"我好想回去跟你喝一杯。"
+"我酒量不行，别把你喝扫兴了。"
+"但爸想跟你坐坐。"`,
+   source:'AI按照真实聊天记录仿写（人物迁移：妈妈→爸爸，场景迁移：吃饭→喝酒）',
+   explain:'AI将"妈妈/做饭/想你了"替换为"爸爸/喝酒/想坐坐"，保留了三句话的结构和"但…"的转折格式。原版的情感更直接真实，AI版在"爸爸"的语气模仿上略显刻意。'},
+
+  {id:'d_poem',type:'text',isAI:false,title:'',typeHint:'🎭 现代诗',
+   content:`在陌生的街上
+有许多人跳舞
+跳得整齐而莫测
+使我无法通过
+由于长久的等待
+我变成了路牌
+无一字说明
+指向无任何一处具体的地方`,
+   source:'现代诗（题库原创）',
+   explain:'这首诗用"路牌"的比喻表达疏离感和迷失，"跳得整齐而莫测"的描写充满荒诞感，"无一字说明/指向无任何一处具体的地方"的结尾意味深长，是有清晰个人意识和诗歌感的原创表达。'},
+
+  {id:'d_poem_ai',type:'text',isAI:true,title:'',typeHint:'🎭 现代诗',
+   content:`雨停之后
+人群挤在铁栏前喊口号
+声音重叠成直线
+我挤不进他们的缝隙
+站得太久
+我长成了根电线杆
+影子直指天上
+却没有鸟肯停下`,
+   source:'AI按照现代诗仿写（意象迁移：路牌→电线杆，人群跳舞→喊口号）',
+   explain:'AI将"路牌"替换为"电线杆"，将"人群跳舞"替换为"人群喊口号"，保留了"变成/长成城市物件"和"无法融入"的主题。但"影子直指天上/却没有鸟肯停下"略显刻意，原版的"无一字说明"更有余韵。'},
+];
+
+
+// ── IMAGE QUESTIONS ──
+const NOT_AI_IMGS = [
+  '16.jpg','23.png','19.jpg','36.jpg','9.jpg','27.png','41.jpg','8.jpg',
+  '43.jpg','39.jpg','48.jpg','1.jpg','40.jpg','46.jpg','18.jpg','2.jpg',
+  '25.png','13.jpg','37.jpg','24.png','5.jpg','15.jpg','22.jpg','7.jpg',
+  '21.jpg','26.png','44.jpg','29.jpg','20.jpg','35.jpg','42.jpg','31.jpg',
+  '47.jpg','14.jpg','28.jpg','38.jpg','45.jpg','17.jpg','10.jpg','34.jpg',
+  '32.jpg','33.jpg','12.jpg','4.jpg','11.jpg','6.jpg','30.jpg','3.jpg'
+];
+
+const AI_IMG_SOURCES = [
+  'Midjourney生成','DALL-E生成','Stable Diffusion生成','Sora生成',
+  'Midjourney生成','ComfyUI生成','Flux生成','DALL-E生成',
+];
+const AI_IMG_EXPLAINS = [
+  '仔细观察细节：AI图像常在手指数量、文字、光影逻辑、毛发纹理等处出现不自然的错误。',
+  'AI生成图像往往"过于完美"——背景元素重复、细节处有模糊感、边缘有奇怪的融合痕迹。',
+  '观察图中的建筑、文字、液体或玻璃反光——这些细节往往是AI的"破绽"所在。',
+];
+
+const IMG_Q = [];
+for(let i=1;i<=60;i++){
+  IMG_Q.push({
+    id:`img_ai_${i}`,type:'image',isAI:true,
+    src:`/images/ai/${i}.jpg`,
+    source:AI_IMG_SOURCES[(i-1)%AI_IMG_SOURCES.length],
+    explain:AI_IMG_EXPLAINS[(i-1)%AI_IMG_EXPLAINS.length],
+  });
+}
+NOT_AI_IMGS.forEach((f,i)=>{
+  IMG_Q.push({
+    id:`img_real_${i}`,type:'image',isAI:false,
+    src:`/images/notai/${f}`,
+    source:'真实摄影作品',
+    explain:'这是真实拍摄的照片。真实照片中的细节是连续的、符合物理规律的，光影、纹理、比例都经得起仔细检查，没有AI图像那种"美丽但细节崩塌"的感觉。',
+  });
+});
+
+// ── AUDIO QUESTIONS ──
+const AUDIO_Q = [
+  {id:'au_ai_01',type:'audio',isAI:true,src:'/audio/ai/01_ChatTTS演示.mp3',
+   source:'ChatTTS — AI语音合成工具',
+   explain:'ChatTTS是一款开源的中文AI语音合成模型，以自然度高著称。AI合成语音的特征包括：语调过于平稳、重音分布机械、情感起伏欠缺、偶有奇怪的停顿或字音。'},
+  {id:'au_ai_02',type:'audio',isAI:true,src:'/audio/ai/02_AI朗读演示.mp3',
+   source:'AI朗读工具合成',
+   explain:'AI朗读工具生成的语音通常缺少真人说话时的"气息感"——轻微的换气声、自然的语速变化和个人习惯性的语气词都是区分的关键。'},
+  {id:'au_ai_03',type:'audio',isAI:true,src:'/audio/ai/03_ChatTTS混合版.mp3',
+   source:'ChatTTS混合版本',
+   explain:'这是ChatTTS生成的语音，混合了不同说话风格的训练数据。AI语音在长句中容易出现语调"断层"——前半句和后半句的情感色彩不连贯。'},
+  {id:'au_ai_04',type:'audio',isAI:true,src:'/audio/ai/04_GPT-SoVITS克隆.mp3',
+   source:'GPT-SoVITS声音克隆技术',
+   explain:'GPT-SoVITS是一种声音克隆技术，可以模仿特定人声说话。辨别克隆声音的关键：辅音的爆破感、情绪变化时的自然过渡是否流畅。'},
+  {id:'au_ai_05',type:'audio',isAI:true,src:'/audio/ai/05_ChatTTS真实.mp3',
+   source:'ChatTTS高真实度版本',
+   explain:'这是ChatTTS调优后生成的高真实度语音。即使如此，AI语音在"感叹词"（哦、啊、嗯）和"笑声"处往往仍然显得不自然。'},
+  {id:'au_ai_06',type:'audio',isAI:true,src:'/audio/ai/06_AI中文配音_蓝色星球.mp3',
+   source:'AI中文配音（蓝色星球）',
+   explain:'纪录片AI配音追求专业感，但与人类配音员相比，缺少那种根据画面内容调整的微妙情绪起伏，整体偏"播报感"。'},
+  {id:'au_ai_07',type:'audio',isAI:true,src:'/audio/ai/07_AI机器人讲中文.mp3',
+   source:'AI机器人TTS系统',
+   explain:'这是较老一代的TTS（文字转语音）系统，辨认特征明显：语调机械、音节间隔均匀、缺少连读和音变。'},
+  {id:'au_ai_08',type:'audio',isAI:true,src:'/audio/ai/08_Sora配音熊出没.mp3',
+   source:'Sora配音技术（熊出没片段）',
+   explain:'Sora具备视频生成和配音能力，但AI配音的"表演感"往往不足，角色情绪的夸张程度和人类配音演员的处理方式有明显差异。'},
+  {id:'au_ai_09',type:'audio',isAI:true,src:'/audio/ai/09_天国拯救AI中配.mp3',
+   source:'游戏AI中文配音（天国拯救）',
+   explain:'AI游戏配音追求效率，但缺少方言腔调、台词节奏的个性化处理，听起来较为"标准化"，和真人配音演员的特色化演绎有明显区别。'},
+
+  {id:'au_real_01',type:'audio',isAI:false,src:'/audio/notai/01_罗翔说刑法.mp3',
+   source:'罗翔教授讲课实录（中国政法大学刑法学教授）',
+   explain:'罗翔老师的讲课风格极具辨识度：语速时快时慢、善用停顿制造节奏感、偶有武汉口音，情绪投入真实，这些都是真实人声的典型特征。'},
+  {id:'au_real_03',type:'audio',isAI:false,src:'/audio/notai/03_十三邀_项飙.mp3',
+   source:'许知远《十三邀》对话项飙（社会学家）',
+   explain:'访谈类真实人声特征明显：有思考时的停顿、语速不均匀、偶有口误或重复，项飙说话时还有学者特有的"边想边说"的语气。'},
+  {id:'au_real_04',type:'audio',isAI:false,src:'/audio/notai/04_高晓松晓说_文化.mp3',
+   source:'高晓松《晓说》节目实录（音乐人、文化评论者）',
+   explain:'高晓松说话时带有明显的个人风格：语速较快、用词随意而博学、偶有笑声和感叹词，这些个性化特征是AI很难完整复制的。'},
+  {id:'au_real_05',type:'audio',isAI:false,src:'/audio/notai/05_白岩松聊抖音.mp3',
+   source:'白岩松谈话节目（央视主播、评论员）',
+   explain:'白岩松的说话特点：标准普通话，但有新闻主播特有的抑扬顿挫，在即兴评论时与朗读播报有明显区别，情绪化表达是真实性的证明。'},
+  {id:'au_real_07',type:'audio',isAI:false,src:'/audio/notai/07_罗翔法庭实战.mp3',
+   source:'罗翔教授法庭案例分析实录',
+   explain:'与课堂讲授相比，法庭情景中的语气更为严谨，但仍保留罗翔特有的停顿习惯和语调，这种场景切换下的真实性是AI难以模拟的。'},
+  {id:'au_real_08',type:'audio',isAI:false,src:'/audio/notai/08_马未都观复.mp3',
+   source:'马未都《观复嘟嘟》（文化学者、收藏家）',
+   explain:'马未都讲话时带有北京老炮儿特有的腔调，语气随意中透着见识，有典型的北京话语音特征，这种地域性和个人性是AI声音的缺失。'},
+  {id:'au_real_09',type:'audio',isAI:false,src:'/audio/notai/09_锵锵三人行.mp3',
+   source:'《锵锵三人行》节目实录（窦文涛等）',
+   explain:'多人对谈节目中，不同人声的交叉、抢话、笑声和思路的即兴跳跃，是AI最难复制的真实对话场景。'},
+  {id:'au_real_10',type:'audio',isAI:false,src:'/audio/notai/10_刘慈欣采访.mp3',
+   source:'刘慈欣接受媒体采访（科幻作家）',
+   explain:'刘慈欣说话偏慢、带有山西口音，措辞理性而低调，在回答问题时有明显的思考停顿。这种朴实无华的真实语感很难被AI声音精准模仿。'},
+];
+
+// ════════════════════════════════════════════════════
+// GAME STATE
+// ════════════════════════════════════════════════════
+const G = {
+  player: {name:'', avatar:{e:'🔥',c:'#b71c1c'}},
+  questions: [],
+  current: 0,
+  score: 0,
+  correct: 0,
+  wrong: 0,
+  answers: [],
+  timer: null,
+  timerVal: 20,
+  streak: 0,
+  rank: null,
+};
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function buildQuestions(){
+  const textAI = shuffle(TEXT_Q.filter(q=>q.isAI));
+  const textHuman = shuffle(TEXT_Q.filter(q=>!q.isAI));
+  const imgAI = shuffle(IMG_Q.filter(q=>q.isAI));
+  const imgHuman = shuffle(IMG_Q.filter(q=>!q.isAI));
+  const audAI = shuffle(AUDIO_Q.filter(q=>q.isAI));
+  const audHuman = shuffle(AUDIO_Q.filter(q=>!q.isAI));
+
+  const picked = [
+    ...textAI.slice(0,3), ...textHuman.slice(0,3),
+    ...imgAI.slice(0,5),  ...imgHuman.slice(0,5),
+    ...audAI.slice(0,2),  ...audHuman.slice(0,2),
+  ];
+  return shuffle(picked);
+}
+
+// ════════════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  // Landing-specific actions
+  if(id==='sLanding'){
+    startLandingMusic();
+    loadLandingLb();
+    const bar=document.getElementById('landingUserBar');
+    if(G.player&&G.player.name){
+      bar.style.display='flex';
+      renderAvInEl(G.player.avatar||{e:'👤',c:'#333'}, document.getElementById('landingUserAv'));
+      document.getElementById('landingUserName').textContent=G.player.name;
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════
+// REGISTRATION
+// ════════════════════════════════════════════════════
+let selectedAvatar = null;
+
+function selectAvatar(i){
+  document.querySelectorAll('.av-item').forEach((el,j)=>{
+    el.classList.toggle('selected', j===i);
+  });
+  selectedAvatar = i;
+  checkReady();
+}
+
+function selectRandomAvatar(){
+  const i = Math.floor(Math.random()*AVATARS.length);
+  selectAvatar(i);
+  // Scroll the selected avatar into view
+  const items = document.querySelectorAll('.av-item');
+  if(items[i]) items[i].scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+
+function checkReady(){
+  const name = document.getElementById('nameInput').value.trim();
+  const btn = document.getElementById('btnGo');
+  btn.classList.toggle('ready', name.length>0 && selectedAvatar!==null);
+}
+
+document.getElementById('nameInput').addEventListener('input', checkReady);
+document.getElementById('btnStart').onclick = ()=>{
+  showScreen('sRegister');
+};
+
+document.getElementById('btnGo').onclick = ()=>{
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name || selectedAvatar===null) return;
+  G.player.name = name;
+  G.player.avatar = AVATARS[selectedAvatar];
+  G.player.province = document.getElementById('provinceInput').value.trim();
+  G.player.college = document.getElementById('collegeInput').value.trim();
+  startGame();
+};
+
+// ════════════════════════════════════════════════════
+// GAME
+// ════════════════════════════════════════════════════
+function startGame(){
+  stopLandingMusic();
+  G.questions = buildQuestions();
+  G.current = 0; G.score = 0; G.correct = 0; G.wrong = 0;
+  G.answers = []; G.streak = 0;
+
+  // Set player info in topbar
+  const av = G.player.avatar;
+  const topAv = document.getElementById('topAvatar');
+  renderAvInEl(av, topAv);
+  document.getElementById('topName').textContent = G.player.name;
+
+  showScreen('sQuiz');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = G.questions[G.current];
+  const total = G.questions.length;
+
+  document.getElementById('qNum').textContent = `第 ${G.current+1} / ${total} 题`;
+  document.getElementById('progressFill').style.width = `${(G.current/total)*100}%`;
+
+  const badge = document.getElementById('qTypeBadge');
+  const typeMap = {text:{cls:'text',label:'📝 文字'},image:{cls:'image',label:'🖼️ 图片'},audio:{cls:'audio',label:'🎵 音频'}};
+  const tm = typeMap[q.type]||typeMap.text;
+  badge.className='q-type-badge '+tm.cls;
+  badge.textContent=tm.label;
+
+  const content = document.getElementById('qContent');
+  if(q.type==='text'){
+    content.innerHTML=`
+      ${q.title?`<div class="text-title">${q.title}</div>`:''}
+      ${q.typeHint?`<div class="text-type-hint">${q.typeHint}</div>`:''}
+      <div class="text-content">${q.content}</div>`;
+  } else if(q.type==='image'){
+    content.innerHTML=`
+      <div class="img-content">
+        <img src="${q.src}" alt="辨别图片" onerror="this.parentElement.innerHTML='<div style=\\'padding:40px;text-align:center;color:var(--muted)\\'>图片加载失败，请检查服务器是否在线</div>'">
+        <div class="img-scan"></div>
+      </div>`;
+  } else if(q.type==='audio'){
+    const bars = Array.from({length:16},(_,i)=>`<div class="audio-bar" style="--delay:${i*0.05}s;animation-delay:${i*0.07}s"></div>`).join('');
+    content.innerHTML=`
+      <div class="audio-content">
+        <div class="audio-hint">🎵 仔细聆听，判断这段音频的声音</div>
+        <div class="audio-visual">${bars}</div>
+        <div class="audio-player-wrap">
+          <audio controls preload="auto" style="width:100%;border-radius:8px" src="${q.src}">
+            你的浏览器不支持音频播放
+          </audio>
+        </div>
+        <div class="audio-hint">先听一遍再作答</div>
+      </div>`;
+  }
+
+  // Enable buttons
+  document.getElementById('btnAI').disabled = false;
+  document.getElementById('btnHuman').disabled = false;
+
+  // Start timer
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(G.timer);
+  G.timerVal = 20;
+  updateTimer();
+  G.timer = setInterval(()=>{
+    G.timerVal--;
+    updateTimer();
+    if(G.timerVal<=0){
+      clearInterval(G.timer);
+      submitAnswer(null);
+    }
+  },1000);
+}
+
+function updateTimer(){
+  const arc = document.getElementById('timerArc');
+  const num = document.getElementById('timerNum');
+  const pct = G.timerVal/20;
+  arc.style.strokeDashoffset = 113*(1-pct);
+  arc.style.stroke = pct>.5?'var(--cyan)':pct>.25?'#ffd700':'var(--red)';
+  num.textContent = G.timerVal;
+  num.style.color = pct>.5?'var(--cyan)':pct>.25?'#ffd700':'var(--red)';
+}
+
+function submitAnswer(guessIsAI){
+  clearInterval(G.timer);
+  document.getElementById('btnAI').disabled = true;
+  document.getElementById('btnHuman').disabled = true;
+
+  const q = G.questions[G.current];
+  const isCorrect = (guessIsAI === null) ? false : (guessIsAI === q.isAI);
+  const timeBonus = Math.floor(G.timerVal/20*50);
+  const streakMult = G.streak>=10?2:G.streak>=5?1.5:G.streak>=3?1.2:1;
+
+  let pts = 0;
+  if(isCorrect){
+    pts = Math.floor((100+timeBonus)*streakMult);
+    G.score += pts;
+    G.correct++;
+    G.streak++;
+  } else {
+    G.wrong++;
+    G.streak=0;
+  }
+
+  // Store answer
+  G.answers.push({q, guessIsAI, isCorrect, pts});
+
+  // Update stats display
+  animateCounter('statScore', G.score);
+  document.getElementById('statCorrect').textContent = G.correct;
+  document.getElementById('statWrong').textContent = G.wrong;
+
+  // Show feedback
+  showFeedback(q, isCorrect, pts, guessIsAI);
+}
+
+function animateCounter(id, target){
+  const el = document.getElementById(id);
+  const from = parseInt(el.textContent)||0;
+  const diff = target-from;
+  const steps = 20;
+  let i=0;
+  const iv = setInterval(()=>{
+    i++;
+    el.textContent = Math.round(from + diff*(i/steps));
+    if(i>=steps){clearInterval(iv);el.textContent=target;}
+  },20);
+}
+
+function showFeedback(q, isCorrect, pts, guessIsAI){
+  const overlay = document.getElementById('feedbackOverlay');
+  document.getElementById('fbResult').textContent = isCorrect?'🎉':'💥';
+  const lbl = document.getElementById('fbLabel');
+  lbl.textContent = isCorrect?'答对了！':'答错了！';
+  lbl.className = 'feedback-label '+(isCorrect?'correct':'wrong');
+
+  if(guessIsAI===null){
+    document.getElementById('fbPoints').textContent = '⏰ 超时，未得分';
+  } else if(isCorrect){
+    document.getElementById('fbPoints').textContent = `+${pts} 分 ${G.streak>=3?'🔥×'+G.streak+' 连击！':''}`;
+  } else {
+    document.getElementById('fbPoints').textContent = `正确答案：${q.isAI?'AI生成':'真实原创'}`;
+  }
+
+  document.getElementById('fbSource').textContent = q.source||'—';
+  document.getElementById('fbExplain').textContent = q.explain||'';
+
+  overlay.classList.add('show');
+
+  // Float score animation + SFX
+  if(isCorrect && pts>0){
+    spawnScoreFloat(pts);
+    spawnParticles(true);
+    playSfxCorrect();
+  } else if(!isCorrect){
+    document.querySelector('.content-card')?.classList.add('shake');
+    setTimeout(()=>document.querySelector('.content-card')?.classList.remove('shake'),400);
+    spawnParticles(false);
+    playSfxWrong();
+  }
+}
+
+function spawnScoreFloat(pts){
+  const el=document.createElement('div');
+  el.className='score-float';
+  el.textContent=`+${pts}`;
+  el.style.color='var(--gold)';
+  const box=document.getElementById('statScore').getBoundingClientRect();
+  el.style.left=box.left+'px';el.style.top=box.top+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1000);
+}
+
+function spawnParticles(success){
+  const colors=success?['#ffd700','#69ff47','#00e5ff']:['#ff1744','#ff5252','#ff8a80'];
+  for(let i=0;i<(success?18:8);i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const size=Math.random()*8+4;
+    p.style.cssText=`width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${innerWidth*.5}px;top:${innerHeight*.5}px;
+      --dur:${.6+Math.random()*.6}s;
+      --dx:${(Math.random()-0.5)*200}px;--dy:${(Math.random()-1.2)*180}px;`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),1200);
+  }
+}
+
+document.getElementById('btnNext').onclick = ()=>{
+  document.getElementById('feedbackOverlay').classList.remove('show');
+  G.current++;
+  if(G.current>=G.questions.length){
+    endGame();
+  } else {
+    renderQuestion();
+  }
+};
+
+// ════════════════════════════════════════════════════
+// RESULTS
+// ════════════════════════════════════════════════════
+async function endGame(){
+  showScreen('sResults');
+
+  // Animate score
+  let s=0;
+  const iv=setInterval(()=>{
+    s=Math.min(s+Math.ceil(G.score/30),G.score);
+    document.getElementById('finalScore').textContent=s.toLocaleString();
+    if(s>=G.score)clearInterval(iv);
+  },30);
+
+  document.getElementById('rTotal').textContent=G.questions.length;
+  document.getElementById('rCorrect').textContent=G.correct;
+  document.getElementById('rWrong').textContent=G.wrong;
+
+  buildReviewList();
+
+  // Submit score
+  try{
+    const res=await fetch('/score',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name:G.player.name,
+        province:G.player.province||'',
+        college:G.player.college||'',
+        avatar:G.player.avatar.img||G.player.avatar.e||'👤',
+        avatarBg:G.player.avatar.c,
+        score:G.score,
+        correct:G.correct,
+        wrong:G.wrong,
+        total:G.questions.length
+      })
+    });
+    const data=await res.json();
+    G.rank=data;
+    const rankBox=document.getElementById('rankBox');
+    rankBox.style.display='block';
+    // Medal
+    const medal=data.rank===1?'🥇 ':data.rank===2?'🥈 ':data.rank===3?'🥉 ':'';
+    document.getElementById('rankNum').textContent=`${medal}第 ${data.rank} 名`;
+    // Percentile
+    const pct=data.percentile||0;
+    document.getElementById('rankPct').textContent=`超越了 ${pct}% 的挑战者`;
+    // Animated progress bar
+    setTimeout(()=>{
+      document.getElementById('rankPctBar').style.width=pct+'%';
+    },300);
+    // Record breaking
+    if(data.rank===1 && data.total>1){
+      setTimeout(()=>{
+        const burst=document.getElementById('recordBurst');
+        burst.classList.add('show');
+        spawnParticles(true);spawnParticles(true);spawnParticles(true);
+        setTimeout(()=>burst.classList.remove('show'),3600);
+      },800);
+    }
+  }catch(e){
+    // Offline mode
+  }
+}
+
+function buildReviewList(){
+  const list=document.getElementById('reviewList');
+  list.innerHTML='';
+  G.answers.forEach((ans,i)=>{
+    const q=ans.q;
+    const label=q.type==='text'?(q.title||'文字题'):q.type==='image'?`图片题 #${i+1}`:`音频题 #${i+1}`;
+    const item=document.createElement('div');
+    item.className='review-item '+(ans.isCorrect?'correct-item':'wrong-item');
+    item.innerHTML=`
+      <span class="review-icon">${ans.isCorrect?'✅':'❌'}</span>
+      <span class="review-text">${label}</span>
+      <span class="review-badge ${q.isAI?'ai':'human'}">${q.isAI?'AI生成':'真实原创'}</span>
+    `;
+    if(!ans.isCorrect){
+      item.title='点击查看详情';
+      item.onclick=()=>showDetail(ans,i);
+    }
+    list.appendChild(item);
+  });
+}
+
+// ════════════════════════════════════════════════════
+// DETAIL MODAL
+// ════════════════════════════════════════════════════
+function showDetail(ans,idx){
+  const q=ans.q;
+  document.getElementById('detailTitle').textContent=q.title||`第 ${idx+1} 题`;
+  document.getElementById('detailMeta').textContent=`类型：${q.type==='text'?'文字题':q.type==='image'?'图片题':'音频题'} · ${q.typeHint||''}`;
+
+  let contentHTML='';
+  if(q.type==='text'){
+    contentHTML=(q.content||'').substring(0,400)+(q.content?.length>400?'…':'');
+  } else if(q.type==='image'){
+    contentHTML=`<img src="${q.src}" style="max-width:100%;border-radius:8px;margin-top:8px">`;
+  } else {
+    contentHTML=`<audio controls src="${q.src}" style="width:100%;margin-top:8px"></audio>`;
+  }
+  document.getElementById('detailContent').innerHTML=contentHTML;
+
+  const yourGuess=ans.guessIsAI===null?'超时未答':ans.guessIsAI?'AI生成':'真实原创';
+  const correctAns=q.isAI?'AI生成':'真实原创';
+  document.getElementById('detailPlayerAns').textContent=yourGuess;
+  document.getElementById('detailCorrectAns').textContent=correctAns;
+  document.getElementById('detailSource').textContent=q.source||'—';
+  document.getElementById('detailExplain').textContent=q.explain||'—';
+
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetail(){
+  document.getElementById('detailModal').classList.remove('show');
+}
+document.getElementById('detailModal').onclick=(e)=>{
+  if(e.target===document.getElementById('detailModal'))closeDetail();
+};
+
+// ════════════════════════════════════════════════════
+// LEADERBOARD
+// ════════════════════════════════════════════════════
+async function loadLeaderboard(){
+  const tbody=document.getElementById('lbBody');
+  tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">加载中…</td></tr>';
+  try{
+    const res=await fetch('/leaderboard');
+    const data=await res.json();
+    const scores=data.scores||[];
+    if(!scores.length){
+      tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">暂无记录，快来第一个上榜！</td></tr>';
+      return;
+    }
+    tbody.innerHTML='';
+    scores.slice(0,20).forEach((s,i)=>{
+      const rank=i+1;
+      const rankClass=rank===1?'gold':rank===2?'silver':rank===3?'bronze':'normal';
+      const rankText=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+      const isMe=s.name===G.player.name&&s.score===G.score;
+      const tr=document.createElement('tr');
+      tr.className='lb-row'+(isMe?' me':'');
+      tr.style.animationDelay=`${i*0.05}s`;
+      const affil=[s.province,s.college].filter(Boolean).join(' · ')||'—';
+      tr.innerHTML=`
+        <td><div class="lb-rank ${rankClass}">${rankText}</div></td>
+        <td><div class="lb-player">
+          ${mkAvHtml(s.avatar, s.avatarBg, 'lb-av')}
+          <div class="lb-player-info">
+            <span class="lb-name">${s.name}${isMe?' <span style="color:var(--gold);font-size:.7rem">（你）</span>':''}</span>
+          </div>
+        </div></td>
+        <td><div class="lb-score">${(s.score||0).toLocaleString()}</div></td>
+        <td><div class="lb-correct">${s.correct||0}/${s.total||'?'}</div></td>
+        <td><div class="lb-affil">${affil}</div></td>
+        <td><div class="lb-date">${s.date||'—'}</div></td>`;
+      tbody.appendChild(tr);
+    });
+  }catch(e){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red)">无法连接服务器，请确保 server.py 正在运行</td></tr>';
+  }
+}
+
+// ════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════
+function newChallenge(){
+  // Keep player cleared, go to register
+  G.player={name:'',avatar:null};
+  showScreen('sRegister');
+}
+
+function goHome(){
+  // Show landing, refresh mini-lb
+  showScreen('sLanding');
+  loadLandingLb();
+  // Show user bar if player set
+  const bar=document.getElementById('landingUserBar');
+  if(G.player&&G.player.name){
+    bar.style.display='flex';
+    document.getElementById('landingUserAv').textContent=G.player.avatar?.e||'👤';
+    document.getElementById('landingUserName').textContent=G.player.name;
+  }
+}
+
+function logoutPlayer(){
+  G.player={name:'',avatar:null};
+  document.getElementById('landingUserBar').style.display='none';
+}
+
+function restartGame(){ newChallenge(); }
+
+// Mini leaderboard on landing
+async function loadLandingLb(){
+  const list=document.getElementById('lbMiniList');
+  try{
+    const res=await fetch('/leaderboard');
+    const data=await res.json();
+    const scores=(data.scores||[]).slice(0,10);
+    if(!scores.length){
+      list.innerHTML='<div style="text-align:center;padding:8px;color:var(--muted);font-family:var(--font-mono);font-size:.75rem">暂无记录 — 快来第一个上榜！</div>';
+      return;
+    }
+    list.innerHTML='';
+    scores.forEach((s,i)=>{
+      const rank=i+1;
+      const rankText=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+      const rankColor=rank===1?'var(--gold)':rank===2?'#b0bec5':rank===3?'#8d6e63':'var(--muted)';
+      const row=document.createElement('div');
+      row.className='lb-mini-row'+(rank===1?' top1':'');
+      row.style.animationDelay=`${i*.06}s`;
+      const miniAffil=[s.province,s.college].filter(Boolean).join(' · ');
+      row.innerHTML=`
+        <div class="lb-mini-rank" style="color:${rankColor}">${rankText}</div>
+        <div class="lb-mini-player">
+          ${mkAvHtml(s.avatar, s.avatarBg, 'lb-mini-av')}
+          <div class="lb-mini-player-info">
+            <span class="lb-mini-name">${s.name}</span>
+            ${miniAffil?`<span class="lb-mini-affil">${miniAffil}</span>`:''}
+          </div>
+        </div>
+        <div class="lb-mini-score">${(s.score||0).toLocaleString()}</div>`;
+      list.appendChild(row);
+    });
+  }catch(e){
+    list.innerHTML='<div style="text-align:center;padding:8px;color:var(--muted);font-family:var(--font-mono);font-size:.75rem">— 离线模式 —</div>';
+  }
+}
+loadLandingLb();
+
+</script>
+</body>
+</html>
