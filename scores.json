@@ -1,1 +1,16 @@
-{"scores": []}
+{
+  "scores": [
+    {
+      "name": "弓",
+      "province": "天津",
+      "college": "人工智能",
+      "avatar": "https://assets.pokemon.com/assets/cms2/img/pokedex/full/025.png",
+      "avatarBg": "#f5a623",
+      "score": 1445,
+      "correct": 10,
+      "wrong": 10,
+      "total": 20,
+      "date": "2026-04-09"
+    }
+  ]
+}
